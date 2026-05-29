@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Wifi, WifiOff, Navigation, AlertCircle, Loader2, UserCircle2, MapPin } from 'lucide-react';
+import { Wifi, WifiOff, Navigation, AlertCircle, Loader2, UserCircle2, MapPin, Heart } from 'lucide-react';
 import { MeloSongLockup, MeloSongMark } from './components/MeloSongLogo';
 import SetupScreen from './components/SetupScreen';
 import NowPlaying from './components/NowPlaying';
@@ -16,6 +16,8 @@ import GpsPicker from './components/GpsPicker';
 import AdBanner from './components/AdBanner';
 import MapStylePicker, { MAP_STYLES } from './components/MapStylePicker';
 import type { MapStyle } from './components/MapStylePicker';
+import CameraCapture from './components/CameraCapture';
+import { DonateUser, DonateApp } from './components/DonateModal';
 import { useSocket } from './hooks/useSocket';
 import type { UserProfile, Track, Coordinates, ChatStatus, ChatConversation, IncomingChatRequest, NearbyUser, ChatPeer, Rating } from './types';
 
@@ -48,6 +50,9 @@ export default function App() {
   const [ratingTarget, setRatingTarget]           = useState<NearbyUser | null>(null);
   const [mapStyle, setMapStyle]                   = useState<MapStyle>(MAP_STYLES[0]);
   const [showMapPicker, setShowMapPicker]         = useState(false);
+  const [showCamera, setShowCamera]               = useState(false);
+  const [donateTarget, setDonateTarget]           = useState<NearbyUser | null>(null);
+  const [showDonateApp, setShowDonateApp]         = useState(false);
   const [ratingsCache, setRatingsCache]           = useState<Record<string, Rating[]>>({});
   const [myRatings, setMyRatings]                 = useState<Record<string, string>>({}); // targetId → vibe
   const [focusPosition, setFocusPosition]   = useState<Coordinates | null>(null);
@@ -157,6 +162,14 @@ export default function App() {
       socket.updateProfile({ jamUrl: jamUrl || undefined });
     }
   }, [socket]);
+
+  const handleCameraCapture = useCallback((dataUrl: string) => {
+    if (!profile) return;
+    const updated = { ...profile, photos: [dataUrl, ...(profile.photos ?? [])].slice(0, 3) };
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(updated));
+    setProfile(updated);
+    socket.updateProfile({ photos: updated.photos });
+  }, [profile, socket]);
 
   const handleProfileSave = useCallback((data: Partial<UserProfile> & { jamUrl?: string }) => {
     const updated = { ...profile!, ...data };
@@ -295,6 +308,13 @@ export default function App() {
             <UserCircle2 className="w-4 h-4" />
           </button>
 
+          {/* Donate app */}
+          <button onClick={() => setShowDonateApp(true)}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-pink-400/50
+              hover:text-pink-400 hover:bg-pink-400/10 transition-colors" title="Soutenir MeloSong">
+            <Heart className="w-4 h-4" />
+          </button>
+
           {/* Reset */}
           <button onClick={() => { localStorage.removeItem(PROFILE_KEY); setProfile(null); setJoined(false); }}
             className="w-7 h-7 rounded-lg flex items-center justify-center text-white/20
@@ -423,7 +443,8 @@ export default function App() {
       )}
 
       {showProfileEditor && (
-        <ProfileEditor profile={profile} jamUrl={myJamUrl} onSave={handleProfileSave} onClose={() => setShowProfileEditor(false)} />
+        <ProfileEditor profile={profile} jamUrl={myJamUrl} onSave={handleProfileSave}
+          onClose={() => setShowProfileEditor(false)} onOpenCamera={() => { setShowProfileEditor(false); setShowCamera(true); }} />
       )}
 
       {viewedProfile && (
@@ -432,6 +453,7 @@ export default function App() {
           onClose={() => setViewedProfile(null)}
           onChat={() => { handleStartChat(viewedProfile); setViewedProfile(null); }}
           onRate={() => { setRatingTarget(viewedProfile); setViewedProfile(null); }}
+          onTip={() => { setDonateTarget(viewedProfile); setViewedProfile(null); }}
           canChat={viewedProfile.chatStatus !== 'dnd'}
           ratings={ratingsCache[viewedProfile.id]}
           myRating={myRatings[viewedProfile.id]}
@@ -446,6 +468,24 @@ export default function App() {
         <ChatWindow key={conv.peer.id} conv={conv} onSend={(text) => handleSendMessage(conv.peer.id, text)}
           onClose={() => handleCloseChat(conv.peer.id)} myColor={profile.color} index={i} />
       ))}
+
+      {/* Camera capture */}
+      {showCamera && (
+        <CameraCapture
+          onCapture={handleCameraCapture}
+          onClose={() => setShowCamera(false)}
+        />
+      )}
+
+      {/* User tip */}
+      {donateTarget && (
+        <DonateUser user={donateTarget} onClose={() => setDonateTarget(null)} />
+      )}
+
+      {/* App donation */}
+      {showDonateApp && (
+        <DonateApp accentColor={profile.color} onClose={() => setShowDonateApp(false)} />
+      )}
 
       {/* Map style picker */}
       {showMapPicker && (

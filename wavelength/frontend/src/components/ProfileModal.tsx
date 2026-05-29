@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, MessageCircle, ExternalLink, Music2, MapPin, Cake, Star } from 'lucide-react';
+import { X, MessageCircle, ExternalLink, Music2, MapPin, Cake, Star, Heart } from 'lucide-react';
 import type { NearbyUser, Rating } from '../types';
 import { calcAge } from '../utils/ageUtils';
 import { SpotifyLogo, YouTubeLogo, PLATFORMS } from './SourceLogo';
@@ -9,6 +9,7 @@ interface Props {
   onClose: () => void;
   onChat: () => void;
   onRate: () => void;
+  onTip: () => void;
   canChat: boolean;
   ratings?: Rating[];
   myRating?: string;
@@ -22,7 +23,7 @@ function formatTime(ts: number) {
   return new Date(ts).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
 }
 
-export default function ProfileModal({ user, onClose, onChat, onRate, canChat, ratings = [], myRating }: Props) {
+export default function ProfileModal({ user, onClose, onChat, onRate, onTip, canChat, ratings = [], myRating }: Props) {
   const [photoIdx, setPhotoIdx] = useState(0);
   const photos = user.photos ?? [];
   const { track } = user;
@@ -242,6 +243,15 @@ export default function ProfileModal({ user, onClose, onChat, onRate, canChat, r
             }}>
             <Star className="w-4 h-4" />
             {myRating ? `Ta note : ${myRating} — Modifier` : 'Laisser une note de sympathie'}
+          </button>
+
+          {/* Tip button */}
+          <button onClick={onTip}
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-2xl mb-2
+              font-semibold text-sm text-white transition-all hover:opacity-90 active:scale-95"
+            style={{ background: `linear-gradient(135deg, ${user.color}88, #ec489988)`, border: `1px solid ${user.color}44` }}>
+            <Heart className="w-4 h-4" />
+            Envoyer un don à {user.username}
           </button>
 
           {/* Chat */}

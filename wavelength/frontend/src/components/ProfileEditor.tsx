@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { X, Camera, Save, MapPin, Link2, Cake } from 'lucide-react';
+import { X, Camera, Save, MapPin, Link2, Cake, Video } from 'lucide-react';
 import { maxBirthDate, minBirthDate } from '../utils/ageUtils';
 import type { UserProfile, ConnectedApps } from '../types';
 import { compressImage } from '../utils/imageUtils';
@@ -19,9 +19,10 @@ interface Props {
   jamUrl?: string;
   onSave: (updated: Partial<UserProfile> & { jamUrl?: string }) => void;
   onClose: () => void;
+  onOpenCamera: () => void;
 }
 
-export default function ProfileEditor({ profile, jamUrl: initJamUrl, onSave, onClose }: Props) {
+export default function ProfileEditor({ profile, jamUrl: initJamUrl, onSave, onClose, onOpenCamera }: Props) {
   const [color, setColor]             = useState(profile.color);
   const [emoji, setEmoji]             = useState(profile.emoji);
   const [bio, setBio]                 = useState(profile.bio ?? '');
@@ -88,11 +89,20 @@ export default function ProfileEditor({ profile, jamUrl: initJamUrl, onSave, onC
               </div>
             ))}
             {photos.length < 3 && (
-              <button onClick={() => fileRef.current?.click()}
-                className="w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 hover:bg-white/10 transition-colors"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1.5px dashed rgba(255,255,255,0.15)' }}>
-                <Camera className="w-4 h-4 text-white/30" />
-              </button>
+              <>
+                <button onClick={() => fileRef.current?.click()}
+                  className="w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 hover:bg-white/10 transition-colors"
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1.5px dashed rgba(255,255,255,0.15)' }}>
+                  <Camera className="w-4 h-4 text-white/30" />
+                </button>
+                <button onClick={onOpenCamera}
+                  className="w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 hover:bg-white/10 transition-colors"
+                  style={{ background: 'rgba(139,92,246,0.1)', border: '1.5px dashed rgba(139,92,246,0.3)' }}
+                  title="Prendre une photo avec la caméra">
+                  <Video className="w-4 h-4 text-violet-400" />
+                  <span className="text-xs text-violet-400/60" style={{ fontSize: 8 }}>Caméra</span>
+                </button>
+              </>
             )}
             <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handlePhotoUpload} />
           </div>
