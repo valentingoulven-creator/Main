@@ -17,6 +17,8 @@ export interface UserProfile {
   emoji: string;
 }
 
+export type ChatStatus = 'available' | 'busy' | 'dnd';
+
 export interface NearbyUser {
   id: string;
   username: string;
@@ -25,5 +27,37 @@ export interface NearbyUser {
   position: Coordinates;
   track: Track | null;
   distance: number;
+  chatStatus?: ChatStatus;
   isMock?: boolean;
+}
+
+// ─── Chat ─────────────────────────────────────────────────────────────────────
+
+export interface ChatPeer {
+  id: string;
+  username: string;
+  color: string;
+  emoji: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  fromMe: boolean;
+  text: string;
+  timestamp: number;
+}
+
+export type ChatConvState = 'requesting' | 'active' | 'declined' | 'closed' | 'unavailable';
+
+export interface ChatConversation {
+  peer: ChatPeer;
+  messages: ChatMessage[];
+  unread: number;
+  state: ChatConvState;
+  declineReason?: string;
+}
+
+export interface IncomingChatRequest {
+  from: ChatPeer;
+  timestamp: number;
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link2, X, Search, Loader2, ExternalLink } from 'lucide-react';
+import { Link2, X, Send, Loader2, ExternalLink } from 'lucide-react';
 import type { Track } from '../types';
+import { SpotifyLogo, YouTubeLogo, SourceBadge } from './SourceLogo';
 
 interface OEmbedResult { title: string; author_name?: string; thumbnail_url?: string }
 
@@ -53,13 +54,11 @@ export default function TrackInput({ currentTrack, onSave, onClose, accentColor 
         const res = await fetch(`/api/oembed?url=${encodeURIComponent(url)}`);
         if (!res.ok) throw new Error('Lien non reconnu');
         const data: OEmbedResult = await res.json();
-
         let albumArt = data.thumbnail_url;
         if (src === 'youtube') {
           const ytId = getYtId(url);
           if (ytId) albumArt = `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`;
         }
-
         setPreview({ title: data.title, artist: data.author_name, albumArt, source: src, url });
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : 'Erreur inconnue');
@@ -71,11 +70,8 @@ export default function TrackInput({ currentTrack, onSave, onClose, accentColor 
   }, [url]);
 
   function handleSave() {
-    if (mode === 'url' && preview) {
-      onSave(preview);
-    } else if (mode === 'manual' && title.trim()) {
-      onSave({ title: title.trim(), artist: artist.trim() || undefined, source: 'manual' });
-    }
+    if (mode === 'url' && preview) onSave(preview);
+    else if (mode === 'manual' && title.trim()) onSave({ title: title.trim(), artist: artist.trim() || undefined, source: 'manual' });
     onClose();
   }
 
@@ -85,7 +81,6 @@ export default function TrackInput({ currentTrack, onSave, onClose, accentColor 
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
       onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="glass-strong rounded-3xl w-full max-w-md p-6 animate-slide-up">
-        {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-bold text-white">Qu'est-ce que tu écoutes ?</h2>
           <button onClick={onClose} className="p-1.5 rounded-xl hover:bg-white/10 transition-colors">
@@ -107,28 +102,35 @@ export default function TrackInput({ currentTrack, onSave, onClose, accentColor 
 
         {mode === 'url' ? (
           <div>
+            {/* Platform logos hint */}
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center gap-1.5 text-xs text-white/30">
+                <SpotifyLogo size={16} /> <span>open.spotify.com/track/…</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-white/30">
+                <YouTubeLogo size={16} /> <span>youtu.be/…</span>
+              </div>
+            </div>
+
             <div className="relative mb-4">
               <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
               <input
                 className="wl-input w-full rounded-xl pl-10 pr-10 py-3 text-sm"
-                placeholder="Colle un lien Spotify ou YouTube…"
+                placeholder="Colle ton lien ici…"
                 value={url}
                 onChange={e => setUrl(e.target.value)}
                 autoFocus
               />
               {loading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-violet-400 animate-spin" />}
-              {!loading && url && <button onClick={() => { setUrl(''); setPreview(null); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-white/10">
-                <X className="w-3.5 h-3.5 text-white/40" />
-              </button>}
+              {!loading && url && (
+                <button onClick={() => { setUrl(''); setPreview(null); }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-white/10">
+                  <X className="w-3.5 h-3.5 text-white/40" />
+                </button>
+              )}
             </div>
             {error && <p className="text-xs text-red-400 mb-3">{error}</p>}
             {preview && <TrackPreview track={preview} />}
-            {!url && (
-              <p className="text-xs text-white/30 text-center py-3">
-                Copie l'URL depuis Spotify ou YouTube et colle-la ici
-              </p>
-            )}
           </div>
         ) : (
           <div className="space-y-3 mb-4">
@@ -151,7 +153,7 @@ export default function TrackInput({ currentTrack, onSave, onClose, accentColor 
             className="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition-all duration-200
               disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 flex items-center justify-center gap-2"
             style={{ background: `linear-gradient(135deg, ${accentColor}, #ec4899)` }}>
-            <Search className="w-4 h-4" />
+            <Send className="w-4 h-4" />
             Partager
           </button>
         </div>
@@ -161,8 +163,6 @@ export default function TrackInput({ currentTrack, onSave, onClose, accentColor 
 }
 
 function TrackPreview({ track }: { track: Track }) {
-  const sourceCls = track.source === 'spotify' ? 'badge-spotify' : 'badge-youtube';
-  const sourceLabel = track.source === 'spotify' ? '🟢 Spotify' : '🔴 YouTube';
   return (
     <div className="rounded-2xl overflow-hidden mb-4 animate-pop-in"
       style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -176,8 +176,8 @@ function TrackPreview({ track }: { track: Track }) {
         <div className="min-w-0 flex-1">
           <div className="text-sm font-semibold text-white truncate">{track.title}</div>
           {track.artist && <div className="text-xs text-white/50 truncate mt-0.5">{track.artist}</div>}
-          <div className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full mt-1.5 ${sourceCls}`}>
-            {sourceLabel}
+          <div className="mt-1.5">
+            <SourceBadge source={track.source} size={13} />
           </div>
         </div>
         {track.url && (
