@@ -856,7 +856,13 @@ export default function App() {
       {showSpotifyConnect && (
         <SpotifyConnect
           currentTrack={myTrack}
+          jamUrl={myJamUrl}
           onShare={(track) => handleTrackSave(track)}
+          onJamUpdate={(url) => {
+            setMyJamUrl(url);
+            localStorage.setItem(JAM_KEY, url);
+            socket.updateProfile({ jamUrl: url || undefined });
+          }}
           onClose={() => setShowSpotifyConnect(false)}
         />
       )}
