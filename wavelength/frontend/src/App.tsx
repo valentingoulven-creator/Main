@@ -28,6 +28,9 @@ import LiveFeed from './components/LiveFeed';
 import SpotifyConnect from './components/SpotifyConnect';
 import YouTubeConnect from './components/YouTubeConnect';
 import EmailVerifyBanner, { VerifiedBadge } from './components/EmailVerifyBanner';
+import SettingsPanel from './components/SettingsPanel';
+import { loadBlocked, unblockUser as unblockUserStorage, getReferralCode, clearAllData } from './utils/profileStorage';
+import type { BlockedUser } from './utils/profileStorage';
 import { handleYtCallback, isYtConnected as ytConnected } from './utils/youtubeAuth';
 import type { PublicLive } from './types';
 import { useSocket } from './hooks/useSocket';
@@ -55,6 +58,8 @@ const CHAT_STATUS_UI: Record<ChatStatus, { label: string; color: string; next: C
 export default function App() {
   const [session, setSession]       = useState<Session | null>(loadSession);
   const [emailVerified, setEmailVerified] = useState(() => loadSession()?.emailVerified ?? false);
+  const [showSettings, setShowSettings]   = useState(false);
+  const [blockedUsers, setBlockedUsers]   = useState<BlockedUser[]>(loadBlocked);
   const [profile, setProfile]       = useState<UserProfile | null>(loadProfile);
   const [myTrack, setMyTrack]       = useState<Track | null>(null);
   const [myJamUrl, setMyJamUrl]     = useState<string>(() => localStorage.getItem(JAM_KEY) ?? '');
@@ -328,27 +333,19 @@ export default function App() {
             </div>
 
             {/* Settings roue crantée — droite */}
-            <div className="relative flex-shrink-0">
-              <button
-                onClick={() => { localStorage.removeItem(PROFILE_KEY); logout(); setProfile(null); setSession(null); setJoined(false); }}
-                title="Déconnexion"
-                className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10 active:scale-95 group"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-              >
-                {/* Gear SVG */}
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
-                  className="transition-transform duration-500 group-hover:rotate-45"
-                  stroke="rgba(255,255,255,0.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="3"/>
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                </svg>
-              </button>
-              {/* Disconnect tooltip */}
-              <div className="absolute right-0 top-full mt-1.5 px-2 py-1 rounded-lg text-xs font-semibold text-white pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
-                style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}>
-                Se déconnecter
-              </div>
-            </div>
+            <button
+              onClick={() => setShowSettings(true)}
+              title="Paramètres"
+              className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10 active:scale-95 group flex-shrink-0"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+                className="transition-transform duration-500 group-hover:rotate-45"
+                stroke="rgba(255,255,255,0.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+            </button>
           </div>
 
           {/* Profile — photo large + nom en dessous */}
@@ -726,6 +723,20 @@ export default function App() {
         <ChatWindow key={conv.peer.id} conv={conv} onSend={(text) => handleSendMessage(conv.peer.id, text)}
           onClose={() => handleCloseChat(conv.peer.id)} myColor={profile.color} index={i} />
       ))}
+
+      {/* Settings panel */}
+      {showSettings && session && (
+        <SettingsPanel
+          username={profile.username}
+          email={session.email}
+          referralCode={getReferralCode(session.uid)}
+          blockedUsers={blockedUsers}
+          onUnblock={(id) => { unblockUserStorage(id); setBlockedUsers(loadBlocked()); }}
+          onLogout={() => { localStorage.removeItem(PROFILE_KEY); logout(); setProfile(null); setSession(null); setJoined(false); setShowSettings(false); }}
+          onDeleteAccount={() => { clearAllData(); logout(); setProfile(null); setSession(null); setJoined(false); setShowSettings(false); }}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
 
       {/* YouTube connect */}
       {showYouTubeConnect && (
