@@ -632,16 +632,18 @@ io.on('connection', (socket) => {
 
   // ── Ratings ─────────────────────────────────────────────────────────────────
 
-  socket.on('send_rating', ({ targetId, vibe, note }) => {
+  socket.on('send_rating', ({ targetId, vibe, note, anonymous }) => {
     const sender = connectedUsers.get(socket.id);
     if (!sender || !vibe) return;
 
+    const isAnon = anonymous === true;
     const rating = {
-      fromId: socket.id,
-      fromUsername: sender.username,
-      fromEmoji: sender.emoji,
-      fromColor: sender.color,
-      fromPhoto: sender.photos?.[0] ?? null,
+      fromId:       isAnon ? `anon-${socket.id}` : socket.id,
+      fromUsername: isAnon ? 'Anonyme 🎭'         : sender.username,
+      fromEmoji:    isAnon ? '🎭'                  : sender.emoji,
+      fromColor:    isAnon ? '#64748b'             : sender.color,
+      fromPhoto:    isAnon ? null                  : (sender.photos?.[0] ?? null),
+      anonymous:    isAnon,
       vibe,
       note: note?.trim() || null,
       timestamp: Date.now(),

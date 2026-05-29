@@ -288,9 +288,9 @@ export default function App() {
     socket.getRatings(user.id);
   }, [socket]);
 
-  const handleSendRating = useCallback((vibe: string, note: string) => {
+  const handleSendRating = useCallback((vibe: string, note: string, anonymous: boolean) => {
     if (!ratingTarget) return;
-    socket.sendRating(ratingTarget.id, vibe, note);
+    socket.sendRating(ratingTarget.id, vibe, note, anonymous);
     setMyRatings(prev => ({ ...prev, [ratingTarget.id]: vibe }));
   }, [socket, ratingTarget]);
 
@@ -828,7 +828,7 @@ export default function App() {
         <RatingPicker
           user={ratingTarget}
           alreadyRated={myRatings[ratingTarget.id]}
-          onSubmit={handleSendRating}
+          onSubmit={(vibe, note, anon) => handleSendRating(vibe, note, anon)}
           onClose={() => setRatingTarget(null)}
         />
       )}

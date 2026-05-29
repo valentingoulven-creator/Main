@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Send, Star } from 'lucide-react';
+import { X, Send, Star, EyeOff } from 'lucide-react';
 import type { NearbyUser } from '../types';
 
 const VIBES = [
@@ -17,18 +17,19 @@ const VIBES = [
 
 interface Props {
   user: NearbyUser;
-  alreadyRated?: string; // previous vibe if already rated
-  onSubmit: (vibe: string, note: string) => void;
+  alreadyRated?: string;
+  onSubmit: (vibe: string, note: string, anonymous: boolean) => void;
   onClose: () => void;
 }
 
 export default function RatingPicker({ user, alreadyRated, onSubmit, onClose }: Props) {
-  const [vibe, setVibe] = useState(alreadyRated ?? '');
-  const [note, setNote] = useState('');
+  const [vibe, setVibe]           = useState(alreadyRated ?? '');
+  const [note, setNote]           = useState('');
+  const [anonymous, setAnonymous] = useState(false);
 
   function handleSubmit() {
     if (!vibe) return;
-    onSubmit(vibe, note.trim());
+    onSubmit(vibe, note.trim(), anonymous);
     onClose();
   }
 
@@ -99,6 +100,32 @@ export default function RatingPicker({ user, alreadyRated, onSubmit, onClose }: 
             rows={2}
           />
         </div>
+
+        {/* Anonymous toggle */}
+        <button
+          onClick={() => setAnonymous(a => !a)}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl mb-5 transition-all duration-200"
+          style={anonymous
+            ? { background: 'rgba(139,92,246,0.15)', border: '1.5px solid rgba(139,92,246,0.4)' }
+            : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }
+          }
+        >
+          {/* Toggle switch */}
+          <div className={`w-10 h-6 rounded-full relative flex-shrink-0 transition-all duration-200 ${anonymous ? 'bg-violet-500' : 'bg-white/20'}`}>
+            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all duration-200 ${anonymous ? 'left-5' : 'left-1'}`} />
+          </div>
+          <div className="flex-1 text-left min-w-0">
+            <div className={`text-sm font-semibold ${anonymous ? 'text-violet-300' : 'text-white/70'}`}>
+              Envoyer en anonyme
+            </div>
+            <div className="text-xs text-white/35 mt-0.5">
+              {anonymous
+                ? 'Ton identité sera masquée — seule la vibe et le message seront visibles'
+                : 'Ton prénom et photo seront visibles par le destinataire'}
+            </div>
+          </div>
+          <EyeOff className={`w-4 h-4 flex-shrink-0 transition-colors ${anonymous ? 'text-violet-400' : 'text-white/25'}`} />
+        </button>
 
         {/* Submit */}
         <button

@@ -82,7 +82,7 @@ export function useSocket() {
   const closeChat       = useCallback((to: string)              => socketRef.current?.emit('chat_close',   { to }),               []);
 
   // Ratings
-  const sendRating  = useCallback((targetId: string, vibe: string, note: string) => socketRef.current?.emit('send_rating', { targetId, vibe, note }), []);
+  const sendRating  = useCallback((targetId: string, vibe: string, note: string, anonymous?: boolean) => socketRef.current?.emit('send_rating', { targetId, vibe, note, anonymous: anonymous ?? false }), []);
   const getRatings  = useCallback((targetId: string)                              => socketRef.current?.emit('get_ratings', { targetId }), []);
 
   // Live
