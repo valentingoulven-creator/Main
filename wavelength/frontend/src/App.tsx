@@ -521,7 +521,9 @@ export default function App() {
             )}
           </div>
 
-          <NowPlaying profile={profile} track={myTrack} jamUrl={myJamUrl} onEdit={() => setShowTrackInput(true)} />
+          <NowPlaying profile={profile} track={myTrack} jamUrl={myJamUrl}
+            onEdit={() => setShowTrackInput(true)}
+            onOpenSpotify={() => setShowSpotifyConnect(true)} />
           {/* YouTube session button */}
           <button onClick={() => myYTSession ? undefined : setShowYTSetup(true)}
             className="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold text-white transition-all active:scale-95 hover:opacity-90"
