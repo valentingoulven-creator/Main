@@ -7,6 +7,15 @@ export interface RatingCallbacks {
   onRatingsData?: (targetId: string, ratings: Rating[]) => void;
 }
 
+export interface LiveCallbacks {
+  onViewerJoined?:  (viewerId: string) => void;
+  onViewerLeft?:    (viewerId: string) => void;
+  onLiveOffer?:     (from: string, offer: RTCSessionDescriptionInit) => void;
+  onLiveAnswer?:    (from: string, answer: RTCSessionDescriptionInit) => void;
+  onLiveIce?:       (from: string, candidate: RTCIceCandidateInit) => void;
+  onLiveEnded?:     (broadcasterId: string) => void;
+}
+
 export interface ChatCallbacks {
   onChatRequest?: (from: ChatPeer) => void;
   onChatAccepted?: (from: ChatPeer) => void;
@@ -17,9 +26,10 @@ export interface ChatCallbacks {
 }
 
 export function useSocket() {
-  const socketRef = useRef<Socket | null>(null);
-  const chatCbRef = useRef<ChatCallbacks>({});
+  const socketRef   = useRef<Socket | null>(null);
+  const chatCbRef   = useRef<ChatCallbacks>({});
   const ratingCbRef = useRef<RatingCallbacks>({});
+  const liveCbRef   = useRef<LiveCallbacks>({});
   const [nearbyUsers, setNearbyUsers] = useState<NearbyUser[]>([]);
   const [connected, setConnected] = useState(false);
 
@@ -37,14 +47,20 @@ export function useSocket() {
     socket.on('chat_unavailable', ({ to }: { to: string }) => chatCbRef.current.onChatUnavailable?.(to));
     socket.on('rating_received', ({ from, vibe, note }: { from: ChatPeer; vibe: string; note?: string }) =>
       ratingCbRef.current.onRatingReceived?.(from, vibe, note));
-    socket.on('ratings_data', ({ targetId, ratings }: { targetId: string; ratings: Rating[] }) =>
-      ratingCbRef.current.onRatingsData?.(targetId, ratings));
+    socket.on('ratings_data',  ({ targetId, ratings }: { targetId: string; ratings: Rating[] }) => ratingCbRef.current.onRatingsData?.(targetId, ratings));
+    socket.on('viewer_joined', ({ viewerId }: { viewerId: string })                              => liveCbRef.current.onViewerJoined?.(viewerId));
+    socket.on('viewer_left',   ({ viewerId }: { viewerId: string })                              => liveCbRef.current.onViewerLeft?.(viewerId));
+    socket.on('live_offer',    ({ from, offer }: { from: string; offer: RTCSessionDescriptionInit })   => liveCbRef.current.onLiveOffer?.(from, offer));
+    socket.on('live_answer',   ({ from, answer }: { from: string; answer: RTCSessionDescriptionInit }) => liveCbRef.current.onLiveAnswer?.(from, answer));
+    socket.on('live_ice',      ({ from, candidate }: { from: string; candidate: RTCIceCandidateInit }) => liveCbRef.current.onLiveIce?.(from, candidate));
+    socket.on('live_ended',    ({ broadcasterId }: { broadcasterId: string })                    => liveCbRef.current.onLiveEnded?.(broadcasterId));
     const hb = setInterval(() => socket.emit('heartbeat'), 25000);
     return () => { clearInterval(hb); socket.disconnect(); };
   }, []);
 
   const registerChatCallbacks   = useCallback((cbs: ChatCallbacks)   => { chatCbRef.current = cbs; },   []);
   const registerRatingCallbacks = useCallback((cbs: RatingCallbacks) => { ratingCbRef.current = cbs; }, []);
+  const registerLiveCallbacks   = useCallback((cbs: LiveCallbacks)   => { liveCbRef.current   = cbs; }, []);
 
   // Presence
   const join = useCallback((profile: UserProfile, position: Coordinates | null, track: Track | null, radius: number, chatStatus: ChatStatus) => {
@@ -64,16 +80,24 @@ export function useSocket() {
   const closeChat       = useCallback((to: string)              => socketRef.current?.emit('chat_close',   { to }),               []);
 
   // Ratings
-  const sendRating  = useCallback((targetId: string, vibe: string, note: string) =>
-    socketRef.current?.emit('send_rating', { targetId, vibe, note }), []);
-  const getRatings  = useCallback((targetId: string) =>
-    socketRef.current?.emit('get_ratings', { targetId }), []);
+  const sendRating  = useCallback((targetId: string, vibe: string, note: string) => socketRef.current?.emit('send_rating', { targetId, vibe, note }), []);
+  const getRatings  = useCallback((targetId: string)                              => socketRef.current?.emit('get_ratings', { targetId }), []);
+
+  // Live
+  const startLive   = useCallback((title: string)                                  => socketRef.current?.emit('start_live',   { title }), []);
+  const stopLive    = useCallback(()                                                => socketRef.current?.emit('stop_live'), []);
+  const joinLive    = useCallback((broadcasterId: string)                           => socketRef.current?.emit('join_live',    { broadcasterId }), []);
+  const leaveLive   = useCallback((broadcasterId: string)                           => socketRef.current?.emit('leave_live',   { broadcasterId }), []);
+  const sendOffer   = useCallback((to: string, offer: RTCSessionDescriptionInit)   => socketRef.current?.emit('live_offer',   { to, offer }), []);
+  const sendAnswer  = useCallback((to: string, answer: RTCSessionDescriptionInit)  => socketRef.current?.emit('live_answer',  { to, answer }), []);
+  const sendIce     = useCallback((to: string, candidate: RTCIceCandidateInit)     => socketRef.current?.emit('live_ice',     { to, candidate }), []);
 
   return {
     nearbyUsers, connected,
     join, updatePosition, updateTrack, updateRadius, updateChatStatus, updateProfile,
-    registerChatCallbacks, registerRatingCallbacks,
+    registerChatCallbacks, registerRatingCallbacks, registerLiveCallbacks,
     sendChatRequest, acceptChat, declineChat, sendMessage, closeChat,
     sendRating, getRatings,
+    startLive, stopLive, joinLive, leaveLive, sendOffer, sendAnswer, sendIce,
   };
 }

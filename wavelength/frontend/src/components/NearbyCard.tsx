@@ -1,4 +1,4 @@
-import { MessageCircle, ExternalLink, Users } from 'lucide-react';
+import { MessageCircle, ExternalLink, Users, Radio } from 'lucide-react';
 import type { NearbyUser } from '../types';
 import { SpotifyLogo, YouTubeLogo, ManualMusicLogo } from './SourceLogo';
 
@@ -6,6 +6,7 @@ interface Props {
   user: NearbyUser;
   onClick: () => void;
   onChat: () => void;
+  onWatchLive?: () => void;
 }
 
 function formatDist(m: number) {
@@ -18,7 +19,7 @@ const STATUS_DOT: Record<string, string> = {
   dnd:       '#ef4444',
 };
 
-export default function NearbyCard({ user, onClick, onChat }: Props) {
+export default function NearbyCard({ user, onClick, onChat, onWatchLive }: Props) {
   const { track } = user;
   const canChat = user.chatStatus !== 'dnd';
   const statusDot = STATUS_DOT[user.chatStatus ?? 'available'];
@@ -45,9 +46,14 @@ export default function NearbyCard({ user, onClick, onChat }: Props) {
             <span className="absolute -inset-1 rounded-full animate-ping-slow opacity-25"
               style={{ background: user.color }} />
           )}
-          {/* Chat status dot */}
-          <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2"
-            style={{ background: statusDot, borderColor: '#0d0d1a' }} />
+          {/* LIVE badge or chat dot */}
+          {user.isLive ? (
+            <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white font-black px-1.5 py-0.5 rounded-full leading-none animate-pulse"
+              style={{ fontSize: 8 }}>LIVE</span>
+          ) : (
+            <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2"
+              style={{ background: statusDot, borderColor: '#0d0d1a' }} />
+          )}
         </div>
 
         {/* Info */}
@@ -116,6 +122,23 @@ export default function NearbyCard({ user, onClick, onChat }: Props) {
           <MessageCircle className="w-3.5 h-3.5" />
         </button>
       </div>
+
+      {/* LIVE strip */}
+      {user.isLive && (
+        <button
+          onClick={e => { e.stopPropagation(); onWatchLive?.(); }}
+          className="flex items-center justify-center gap-2 py-2 w-full text-xs font-bold transition-all hover:opacity-90 active:scale-[0.99]"
+          style={{ background: 'linear-gradient(90deg, rgba(239,68,68,0.25), rgba(220,38,38,0.15))', borderTop: '1px solid rgba(239,68,68,0.2)', color: '#ef4444' }}>
+          <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+          <Radio className="w-3.5 h-3.5" />
+          EN DIRECT — {user.liveTitle ?? `Live de ${user.username}`}
+          {user.viewers !== undefined && (
+            <span className="flex items-center gap-0.5 text-red-400/60 ml-auto mr-2">
+              <Users className="w-3 h-3" />{user.viewers}
+            </span>
+          )}
+        </button>
+      )}
 
       {/* Jam strip */}
       {user.jamUrl && (

@@ -341,7 +341,11 @@ function getPublicUser(user) {
     track: user.track,
     jamUrl: user.jamUrl ?? null,
     chatStatus: user.chatStatus ?? 'available',
-    isMock: user.isMock ?? false,
+    isLive:     user.isLive    ?? false,
+    liveTitle:  user.liveTitle ?? null,
+    liveStart:  user.liveStart ?? null,
+    viewers:    user.viewers   ?? 0,
+    isMock:     user.isMock    ?? false,
   };
 }
 
@@ -571,6 +575,58 @@ io.on('connection', (socket) => {
   socket.on('get_ratings', ({ targetId }) => {
     socket.emit('ratings_data', { targetId, ratings: getRatings(targetId) });
   });
+
+  // ── Live streaming (WebRTC signaling) ─────────────────────────────────────
+
+  socket.on('start_live', ({ title }) => {
+    const u = connectedUsers.get(socket.id);
+    if (!u) return;
+    u.isLive    = true;
+    u.liveTitle = title?.trim() || `Live de ${u.username}`;
+    u.liveStart = Date.now();
+    u.viewers   = 0;
+    pushAll(); // notify nearby users of live status
+    console.log(`🔴 LIVE: ${u.username} — "${u.liveTitle}"`);
+  });
+
+  socket.on('stop_live', () => {
+    const u = connectedUsers.get(socket.id);
+    if (!u) return;
+    u.isLive    = false;
+    u.liveTitle = null;
+    u.liveStart = null;
+    u.viewers   = 0;
+    pushAll();
+    // Notify all viewers that the live ended
+    io.sockets.sockets.forEach((s) => {
+      s.emit('live_ended', { broadcasterId: socket.id });
+    });
+  });
+
+  // Viewer asks to watch a live
+  socket.on('join_live', ({ broadcasterId }) => {
+    const broadcaster = connectedUsers.get(broadcasterId);
+    if (!broadcaster?.isLive) {
+      socket.emit('live_ended', { broadcasterId });
+      return;
+    }
+    broadcaster.viewers = (broadcaster.viewers ?? 0) + 1;
+    pushAll();
+    // Tell broadcaster a new viewer is joining, send them the viewer's socket id
+    io.sockets.sockets.get(broadcasterId)?.emit('viewer_joined', { viewerId: socket.id });
+  });
+
+  socket.on('leave_live', ({ broadcasterId }) => {
+    const broadcaster = connectedUsers.get(broadcasterId);
+    if (broadcaster) broadcaster.viewers = Math.max(0, (broadcaster.viewers ?? 1) - 1);
+    pushAll();
+    io.sockets.sockets.get(broadcasterId)?.emit('viewer_left', { viewerId: socket.id });
+  });
+
+  // WebRTC signaling relay
+  socket.on('live_offer',     ({ to, offer })     => io.sockets.sockets.get(to)?.emit('live_offer',     { from: socket.id, offer }));
+  socket.on('live_answer',    ({ to, answer })    => io.sockets.sockets.get(to)?.emit('live_answer',    { from: socket.id, answer }));
+  socket.on('live_ice',       ({ to, candidate }) => io.sockets.sockets.get(to)?.emit('live_ice',       { from: socket.id, candidate }));
 });
 
 // ─── REST ─────────────────────────────────────────────────────────────────────

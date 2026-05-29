@@ -18,6 +18,8 @@ import MapStyleBar, { MAP_STYLES_5 } from './components/MapStyleBar';
 import type { MapStyleDef } from './components/MapStyleBar';
 import CameraCapture from './components/CameraCapture';
 import { DonateUser, DonateApp } from './components/DonateModal';
+import LiveBroadcast from './components/LiveBroadcast';
+import LiveViewer from './components/LiveViewer';
 import { useSocket } from './hooks/useSocket';
 import type { UserProfile, Track, Coordinates, ChatStatus, ChatConversation, IncomingChatRequest, NearbyUser, ChatPeer, Rating } from './types';
 
@@ -52,6 +54,10 @@ export default function App() {
   const [showCamera, setShowCamera]               = useState(false);
   const [donateTarget, setDonateTarget]           = useState<NearbyUser | null>(null);
   const [showDonateApp, setShowDonateApp]         = useState(false);
+  const [showLiveBroadcast, setShowLiveBroadcast] = useState(false);
+  const [watchingLive, setWatchingLive]           = useState<NearbyUser | null>(null);
+  const [amLive, setAmLive]                       = useState(false);
+  const [liveViewers, setLiveViewers]             = useState(0);
   const [ratingsCache, setRatingsCache]           = useState<Record<string, Rating[]>>({});
   const [myRatings, setMyRatings]                 = useState<Record<string, string>>({}); // targetId → vibe
   const [focusPosition, setFocusPosition]   = useState<Coordinates | null>(null);
@@ -65,6 +71,14 @@ export default function App() {
 
   const geo    = useGeolocation();
   const socket = useSocket();
+
+  // Register live callbacks
+  useEffect(() => {
+    socket.registerLiveCallbacks({
+      onViewerJoined: () => setLiveViewers(v => v + 1),
+      onViewerLeft:   () => setLiveViewers(v => Math.max(0, v - 1)),
+    });
+  }, [socket]);
 
   // Register rating callbacks
   useEffect(() => {
@@ -327,6 +341,16 @@ export default function App() {
         <div className="px-4 py-3 flex-shrink-0">
           <div className="text-xs font-semibold text-white/30 uppercase tracking-wider mb-2">J'écoute en ce moment</div>
           <NowPlaying profile={profile} track={myTrack} jamUrl={myJamUrl} onEdit={() => setShowTrackInput(true)} />
+          {/* Go Live button */}
+          <button onClick={() => setShowLiveBroadcast(true)}
+            className="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold text-white transition-all active:scale-95 hover:opacity-90"
+            style={amLive
+              ? { background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', color: '#ef4444' }
+              : { background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444' }
+            }>
+            <span className={`w-2 h-2 bg-red-500 rounded-full ${amLive ? 'animate-pulse' : ''}`} />
+            {amLive ? `En direct — ${liveViewers} spectateur${liveViewers > 1 ? 's' : ''}` : 'Démarrer un Live'}
+          </button>
         </div>
 
         {/* Location status */}
@@ -371,6 +395,7 @@ export default function App() {
               onSelectUser={(pos) => setFocusPosition(pos)}
               onChatUser={handleStartChat}
               onViewProfile={handleOpenProfile}
+              onWatchLive={(user) => setWatchingLive(user)}
             myChatStatus={chatStatus}
             accentColor={profile.color}
           />
@@ -461,6 +486,39 @@ export default function App() {
         <ChatWindow key={conv.peer.id} conv={conv} onSend={(text) => handleSendMessage(conv.peer.id, text)}
           onClose={() => handleCloseChat(conv.peer.id)} myColor={profile.color} index={i} />
       ))}
+
+      {/* Live broadcast */}
+      {showLiveBroadcast && (
+        <LiveBroadcast
+          profile={profile}
+          viewers={liveViewers}
+          isLive={amLive}
+          onStartLive={(title) => { socket.startLive(title); setAmLive(true); }}
+          onStopLive={() => { socket.stopLive(); setAmLive(false); setLiveViewers(0); setShowLiveBroadcast(false); }}
+          onSendOffer={socket.sendOffer}
+          onSendIce={socket.sendIce}
+          onAnswerReceived={(cb) => socket.registerLiveCallbacks({ ...{}, onLiveAnswer: (from, answer) => cb(from, answer) })}
+          onIceReceived={(cb) => socket.registerLiveCallbacks({ ...{}, onLiveIce: (from, c) => cb(from, c) })}
+          onViewerJoined={(cb) => socket.registerLiveCallbacks({ ...{}, onViewerJoined: cb })}
+          onViewerLeft={(cb) => socket.registerLiveCallbacks({ ...{}, onViewerLeft: cb })}
+        />
+      )}
+
+      {/* Live viewer */}
+      {watchingLive && (
+        <LiveViewer
+          broadcaster={watchingLive}
+          myId=""
+          onClose={() => setWatchingLive(null)}
+          onJoinLive={socket.joinLive}
+          onLeaveLive={socket.leaveLive}
+          onSendAnswer={socket.sendAnswer}
+          onSendIce={socket.sendIce}
+          onOfferReceived={(cb) => socket.registerLiveCallbacks({ ...{}, onLiveOffer: cb })}
+          onIceReceived={(cb) => socket.registerLiveCallbacks({ ...{}, onLiveIce: cb })}
+          onLiveEnded={(cb) => socket.registerLiveCallbacks({ ...{}, onLiveEnded: cb })}
+        />
+      )}
 
       {/* Camera capture */}
       {showCamera && (

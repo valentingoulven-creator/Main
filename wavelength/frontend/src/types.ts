@@ -45,6 +45,10 @@ export interface NearbyUser {
   jamUrl?: string;
   address?: string;
   connectedApps?: ConnectedApps;
+  isLive?: boolean;
+  liveTitle?: string;
+  liveStart?: number;
+  viewers?: number;
   isMock?: boolean;
 }
 
