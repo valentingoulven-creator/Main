@@ -110,6 +110,16 @@ function JamSection({ jamUrl, onJamChange }: { jamUrl: string; onJamChange: (url
             )}
           </div>
 
+            {/* Validate button — shown whenever there's a URL that hasn't been confirmed yet */}
+          {input.trim() && step !== 'active' && (
+            <button
+              onClick={() => { onJamChange(input.trim()); setStep('active'); }}
+              className="mt-2 w-full py-3 rounded-xl text-sm font-black text-white flex items-center justify-center gap-2 transition-all active:scale-95 hover:opacity-90 animate-fade-in shadow-lg"
+              style={{ background: 'linear-gradient(135deg, #1DB954, #158a3e)', boxShadow: '0 4px 16px rgba(29,185,84,0.35)' }}>
+              <CheckCircle2 className="w-4 h-4" /> Valider et activer le Jam
+            </button>
+          )}
+
           {step === 'active' && (
             <button onClick={deactivate}
               className="mt-2 text-xs text-red-400/60 hover:text-red-400 transition-colors w-full text-center">
