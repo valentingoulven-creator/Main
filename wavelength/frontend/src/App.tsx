@@ -14,8 +14,8 @@ import RatingPicker from './components/RatingPicker';
 import { useGeolocation } from './hooks/useGeolocation';
 import GpsPicker from './components/GpsPicker';
 import AdBanner from './components/AdBanner';
-import MapStylePicker, { MAP_STYLES } from './components/MapStylePicker';
-import type { MapStyle } from './components/MapStylePicker';
+import MapStyleBar, { MAP_STYLES_5 } from './components/MapStyleBar';
+import type { MapStyleDef } from './components/MapStyleBar';
 import CameraCapture from './components/CameraCapture';
 import { DonateUser, DonateApp } from './components/DonateModal';
 import { useSocket } from './hooks/useSocket';
@@ -48,8 +48,7 @@ export default function App() {
   const [showProfileEditor, setShowProfileEditor] = useState(false);
   const [showGpsPicker, setShowGpsPicker]         = useState(false);
   const [ratingTarget, setRatingTarget]           = useState<NearbyUser | null>(null);
-  const [mapStyle, setMapStyle]                   = useState<MapStyle>(MAP_STYLES[0]);
-  const [showMapPicker, setShowMapPicker]         = useState(false);
+  const [mapStyle, setMapStyle]                   = useState<MapStyleDef>(MAP_STYLES_5[0]);
   const [showCamera, setShowCamera]               = useState(false);
   const [donateTarget, setDonateTarget]           = useState<NearbyUser | null>(null);
   const [showDonateApp, setShowDonateApp]         = useState(false);
@@ -418,22 +417,16 @@ export default function App() {
           </div>
         )}
 
-        {/* Map style + listener count */}
-        <div className="absolute top-4 right-4 z-[500] flex flex-col items-end gap-2">
-          <button
-            onClick={() => setShowMapPicker(true)}
-            className="glass flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-white/70
-              hover:text-white hover:bg-white/10 transition-all active:scale-95"
-          >
-            🗺️ {mapStyle.name}
-          </button>
-          {geo.position && socket.nearbyUsers.length > 0 && (
-            <div className="glass rounded-2xl px-4 py-2 animate-fade-in text-right">
-              <div className="text-xs text-white/50 font-medium">Auditeurs proches</div>
-              <div className="text-2xl font-bold gradient-text">{socket.nearbyUsers.length}</div>
-            </div>
-          )}
-        </div>
+        {/* Style bar */}
+        <MapStyleBar current={mapStyle.id} onChange={setMapStyle} />
+
+        {/* Listener count */}
+        {geo.position && socket.nearbyUsers.length > 0 && (
+          <div className="absolute top-4 right-4 z-[500] glass rounded-2xl px-4 py-2.5 animate-fade-in">
+            <div className="text-xs text-white/50 font-medium">Auditeurs proches</div>
+            <div className="text-2xl font-bold gradient-text">{socket.nearbyUsers.length}</div>
+          </div>
+        )}
         </div>{/* end map wrapper */}
       </main>
 
@@ -485,15 +478,6 @@ export default function App() {
       {/* App donation */}
       {showDonateApp && (
         <DonateApp accentColor={profile.color} onClose={() => setShowDonateApp(false)} />
-      )}
-
-      {/* Map style picker */}
-      {showMapPicker && (
-        <MapStylePicker
-          current={mapStyle.id}
-          onSelect={setMapStyle}
-          onClose={() => setShowMapPicker(false)}
-        />
       )}
 
       {/* Rating picker */}
