@@ -66,9 +66,9 @@ export default function NowPlaying({ profile, track, jamUrl, onEdit }: Props) {
         <a href={jamUrl} target="_blank" rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 py-2 text-xs font-semibold transition-all hover:opacity-90"
           style={{ background: 'linear-gradient(90deg, rgba(29,185,84,0.18), rgba(29,185,84,0.08))', borderTop: '1px solid rgba(29,185,84,0.2)', color: '#1DB954' }}>
-          <SpotifyLogo size={13} />
-          Mon Jam Spotify est actif — Inviter
-          <ExternalLink className="w-3 h-3 opacity-60" />
+          <SpotifyLogo size={13} className="flex-shrink-0" />
+          <span className="truncate">Mon Jam Spotify est actif — Inviter</span>
+          <ExternalLink className="w-3 h-3 opacity-60 flex-shrink-0" />
         </a>
       )}
     </div>

@@ -119,16 +119,16 @@ export default function NearbyCard({ user, onClick, onChat, onWatchLive, onJoinY
         )}
 
         {/* Chat button */}
-        <button
+          <button
           onClick={e => { e.stopPropagation(); if (canChat) onChat(); }}
           disabled={!canChat}
           title={canChat ? 'Discuter' : 'Ne pas déranger'}
-          className={`flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center
+          className={`flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center
             text-white transition-all duration-200
             ${canChat ? 'hover:opacity-90 active:scale-95 cursor-pointer' : 'opacity-30 cursor-not-allowed'}`}
           style={{ background: canChat ? user.color : 'rgba(255,255,255,0.06)' }}
         >
-          <MessageCircle className="w-3.5 h-3.5" />
+          <MessageCircle className="w-4 h-4" />
         </button>
       </div>
 
@@ -140,7 +140,7 @@ export default function NearbyCard({ user, onClick, onChat, onWatchLive, onJoinY
           style={{ background: 'linear-gradient(90deg, rgba(239,68,68,0.25), rgba(220,38,38,0.15))', borderTop: '1px solid rgba(239,68,68,0.2)', color: '#ef4444' }}>
           <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
           <Radio className="w-3.5 h-3.5" />
-          EN DIRECT — {user.liveTitle ?? `Live de ${user.username}`}
+          <span className="truncate">EN DIRECT — {user.liveTitle ?? `Live de ${user.username}`}</span>
           {user.viewers !== undefined && (
             <span className="flex items-center gap-0.5 text-red-400/60 ml-auto mr-2">
               <Users className="w-3 h-3" />{user.viewers}
@@ -156,7 +156,7 @@ export default function NearbyCard({ user, onClick, onChat, onWatchLive, onJoinY
           className="flex items-center justify-center gap-2 py-2 w-full text-xs font-bold transition-all hover:opacity-90 active:scale-[0.99]"
           style={{ background: 'linear-gradient(90deg, rgba(255,0,0,0.2), rgba(204,0,0,0.1))', borderTop: '1px solid rgba(255,0,0,0.2)', color: '#ff4444' }}>
           <YouTubeLogo size={14} />
-          Rejoindre la session — {user.ytSession.title}
+          <span className="truncate">Rejoindre la session — {user.ytSession.title}</span>
           <span className="text-red-400/60 flex items-center gap-0.5"><Users className="w-3 h-3" />{user.ytSession.participants}</span>
         </button>
       )}

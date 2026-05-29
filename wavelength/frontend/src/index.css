@@ -2,7 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-* { box-sizing: border-box; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+/* Safe area for notched phones */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+}
+
+/* Use dynamic viewport height on mobile to avoid chrome bar issues */
+html { height: 100%; height: 100dvh; }
+body { height: 100%; height: 100dvh; }
 
 html, body, #root {
   height: 100%;

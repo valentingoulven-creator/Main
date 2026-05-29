@@ -25,6 +25,7 @@ import type { LiveVisibility } from './components/LiveSetupModal';
 import LiveViewer from './components/LiveViewer';
 import DiscoverTab from './components/DiscoverTab';
 import LiveFeed from './components/LiveFeed';
+import BottomNav from './components/BottomNav';
 import SpotifyConnect from './components/SpotifyConnect';
 import YouTubeConnect from './components/YouTubeConnect';
 import EmailVerifyBanner, { VerifiedBadge } from './components/EmailVerifyBanner';
@@ -309,11 +310,17 @@ export default function App() {
   const chatStatusUI = CHAT_STATUS_UI[chatStatus];
   const openConvs = [...conversations.values()];
 
+  const [mobileTab, setMobileTab] = useState<'nearby' | 'map' | 'discover'>('nearby');
+
   return (
-    <div className="app-bg h-screen flex overflow-hidden">
-      {/* ── Left panel ─────────────────────────────────────── */}
-      <aside className="w-[400px] flex-shrink-0 flex flex-col h-full border-r"
-        style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+    <div className="app-bg flex flex-col overflow-hidden" style={{ height: '100dvh' }}>
+      <div className="flex flex-1 overflow-hidden">
+
+      {/* ── Left panel: full width on mobile (nearby tab), 400px fixed on desktop ── */}
+      <aside className={`flex-col border-r overflow-hidden flex-shrink-0
+        ${mobileTab === 'nearby' ? 'flex' : 'hidden'} md:flex`}
+        style={{ borderColor: 'rgba(255,255,255,0.07)', width: '100%', maxWidth: '100%' }}>
+        <div className="flex flex-col h-full md:w-[400px]" style={{ width: '100%' }}>
 
         {/* Header */}
         <header className="flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
@@ -574,15 +581,17 @@ export default function App() {
             />
           )}
         </div>
+        </div>{/* end inner 400px div */}
       </aside>
 
-      {/* ── Right panel: map or live feed ────────────────── */}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      {/* ── Right panel: hidden on mobile (shown via map/discover tabs) ── */}
+      <main className={`flex-1 flex flex-col overflow-hidden
+        ${mobileTab === 'nearby' ? 'hidden md:flex' : 'flex'}`}>
         {/* Ad banner — only on map view */}
         {view !== 'discover' && <AdBanner />}
 
-        {/* Live feed (Découvrir) replaces map */}
-        {view === 'discover' ? (
+        {/* Live feed (Découvrir) replaces map — also on mobile discover tab */}
+        {view === 'discover' || mobileTab === 'discover' ? (
           <div className="flex-1 overflow-hidden">
             <LiveFeed
               lives={socket.publicLives}
@@ -691,6 +700,20 @@ export default function App() {
         </div>
         )}{/* end map wrapper + discover/map conditional */}
       </main>
+      </div>{/* end flex-1 row */}
+
+      {/* ── Mobile bottom navigation ─────────────────────── */}
+      <div className="md:hidden">
+        <BottomNav
+          active={mobileTab}
+          onChange={(t) => {
+            setMobileTab(t);
+            if (t === 'discover') socket.getPublicLivesReq();
+          }}
+          accentColor={profile.color}
+          discoverCount={socket.publicLives.length}
+        />
+      </div>
 
       {/* ── Modals & overlays ─────────────────────────────── */}
       {showTrackInput && (
