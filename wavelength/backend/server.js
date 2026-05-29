@@ -204,6 +204,20 @@ const MOCK_DATA = [
     jamUrl: null,
   },
 
+  // ── Bot EN DIRECT ─────────────────────────────────────────────────────────
+  {
+    username: 'DJ_Melo',  color: '#ef4444', emoji: '🎚️', dist: 60, angle: 1.0,
+    bio: '🔴 En live maintenant — mix électro/house en direct de Paris !', address: 'Paris 75001', birthDate: '1995-06-10',
+    interests: ['Électro 🥁', 'House 🎚️', 'Festivals 🎪', 'Tech 💻'],
+    connectedApps: { spotify: 'dj_melo_paris' },
+    track: { title: 'One More Time', artist: 'Daft Punk', source: 'spotify', url: 'https://open.spotify.com/track/2veoh0LMBtMFBSjCCOhrvo' },
+    jamUrl: 'https://open.spotify.com/jam/demo-djmelo',
+    isLive: true,
+    liveTitle: '🎚️ Mix Électro/House — Paris Live',
+    livePublic: true,
+    liveViewers: 47,
+  },
+
   // ── 5 nouveaux bots ───────────────────────────────────────────────────────
   {
     username: 'Axel',    color: '#7c3aed', emoji: '🎚️', dist: 95,  angle: 1.1,
@@ -298,6 +312,11 @@ function initMockUsers(lat, lng) {
       position: pos,
       track: data.track,
       jamUrl: data.jamUrl,
+      isLive:     data.isLive     ?? false,
+      liveTitle:  data.liveTitle  ?? null,
+      livePublic: data.livePublic ?? false,
+      liveStart:  data.isLive ? Date.now() - Math.floor(Math.random() * 1800000) : null, // up to 30min ago
+      viewers:    data.liveViewers ?? 0,
       chatStatus: 'available',
       radius: 5000,
       lastSeen: Date.now(),
@@ -385,7 +404,7 @@ function getNearbyUsers(forId, position, radiusMeters) {
 }
 
 function getPublicLives() {
-  return [...connectedUsers.values()]
+  return [...connectedUsers.values(), ...mockUsers]
     .filter(u => u.isLive && u.livePublic)
     .map(u => ({
       id: u.id,
