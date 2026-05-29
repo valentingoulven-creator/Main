@@ -1,0 +1,133 @@
+export interface Coordinates {
+  lat: number;
+  lng: number;
+}
+
+export interface Track {
+  title: string;
+  artist?: string;
+  albumArt?: string;
+  source: 'spotify' | 'youtube' | 'manual';
+  url?: string;
+}
+
+// ─── YouTube Session ──────────────────────────────────────────────────────────
+
+export interface YTSession {
+  videoId: string;
+  title: string;
+  videoTitle?: string;
+  participants: number;
+  state: 'playing' | 'paused';
+  currentTime: number;
+  startedAt: number;
+}
+
+export type PlatformKey = 'spotify';
+export type ConnectedApps = Partial<Record<PlatformKey, string>>;
+
+export interface UserProfile {
+  username: string;
+  color: string;
+  emoji: string;
+  bio?: string;
+  birthDate?: string; // ISO 'YYYY-MM-DD'
+  interests?: string[];
+  photos?: string[];
+  jamUrl?: string;
+  address?: string;
+  connectedApps?: ConnectedApps;
+}
+
+export type ChatStatus = 'available' | 'invisible';
+
+export interface NearbyUser {
+  id: string;
+  username: string;
+  color: string;
+  emoji: string;
+  position: Coordinates;
+  track: Track | null;
+  distance: number;
+  chatStatus?: ChatStatus;
+  bio?: string;
+  birthDate?: string;
+  interests?: string[];
+  photos?: string[];
+  jamUrl?: string;
+  address?: string;
+  connectedApps?: ConnectedApps;
+  ytSession?: YTSession | null;
+  isLive?: boolean;
+  liveTitle?: string;
+  liveStart?: number;
+  livePublic?: boolean;
+  viewers?: number;
+  isMock?: boolean;
+}
+
+// ─── Chat ─────────────────────────────────────────────────────────────────────
+
+export interface ChatPeer {
+  id: string;
+  username: string;
+  color: string;
+  emoji: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  fromMe: boolean;
+  text: string;
+  timestamp: number;
+}
+
+export type ChatConvState = 'requesting' | 'active' | 'declined' | 'closed' | 'unavailable';
+
+export interface ChatConversation {
+  peer: ChatPeer;
+  messages: ChatMessage[];
+  unread: number;
+  state: ChatConvState;
+  declineReason?: string;
+}
+
+export interface IncomingChatRequest {
+  from: ChatPeer;
+  timestamp: number;
+}
+
+// ─── Public lives ─────────────────────────────────────────────────────────────
+
+export interface PublicLive {
+  id: string;
+  username: string;
+  color: string;
+  emoji: string;
+  photos: string[];
+  bio: string;
+  liveTitle: string;
+  liveStart: number;
+  viewers: number;
+  track: Track | null;
+  address: string;
+}
+
+// ─── Ratings ──────────────────────────────────────────────────────────────────
+
+export interface Rating {
+  fromId: string;
+  fromUsername: string;
+  fromEmoji: string;
+  fromColor: string;
+  fromPhoto?: string;
+  vibe: string;   // emoji vibe chosen
+  note?: string;  // optional text
+  timestamp: number;
+}
+
+export interface RatingSummary {
+  targetId: string;
+  ratings: Rating[];
+  avgVibe: string;
+}
