@@ -5,32 +5,49 @@ interface GeoState {
   position: Coordinates | null;
   error: string | null;
   loading: boolean;
+  unavailable: boolean; // true when the device/browser can't provide GPS
 }
 
 export function useGeolocation() {
-  const [state, setState] = useState<GeoState>({ position: null, error: null, loading: false });
+  const [state, setState] = useState<GeoState>({
+    position: null,
+    error: null,
+    loading: false,
+    unavailable: false,
+  });
 
   const request = useCallback(() => {
     if (!navigator.geolocation) {
-      setState(s => ({ ...s, error: "Géolocalisation non supportée par ce navigateur." }));
+      setState(s => ({ ...s, unavailable: true, error: "Géolocalisation non supportée." }));
       return;
     }
-    setState(s => ({ ...s, loading: true, error: null }));
+    setState(s => ({ ...s, loading: true, error: null, unavailable: false }));
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
-        setState({ position: { lat: coords.latitude, lng: coords.longitude }, error: null, loading: false });
+        setState({ position: { lat: coords.latitude, lng: coords.longitude }, error: null, loading: false, unavailable: false });
       },
       (err) => {
+        const isUnavailable = err.code === 2; // POSITION_UNAVAILABLE
         const msgs: Record<number, string> = {
-          1: "Permission refusée. Autorise l'accès à ta position.",
-          2: "Position indisponible.",
+          1: "Permission refusée. Autorise l'accès à ta position dans les paramètres du navigateur.",
+          2: "Position GPS indisponible sur cet appareil.",
           3: "Délai expiré. Réessaie.",
         };
-        setState(s => ({ ...s, loading: false, error: msgs[err.code] ?? "Erreur inconnue." }));
+        setState(s => ({
+          ...s,
+          loading: false,
+          unavailable: isUnavailable,
+          error: msgs[err.code] ?? "Erreur inconnue.",
+        }));
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
     );
   }, []);
 
-  return { ...state, request };
+  // Let the user manually set a position (city search fallback)
+  const setManual = useCallback((coords: Coordinates) => {
+    setState({ position: coords, error: null, loading: false, unavailable: false });
+  }, []);
+
+  return { ...state, request, setManual };
 }

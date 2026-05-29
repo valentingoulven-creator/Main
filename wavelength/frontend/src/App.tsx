@@ -11,6 +11,7 @@ import ChatNotification from './components/ChatNotification';
 import ProfileModal from './components/ProfileModal';
 import ProfileEditor from './components/ProfileEditor';
 import { useGeolocation } from './hooks/useGeolocation';
+import LocationFallback from './components/LocationFallback';
 import { useSocket } from './hooks/useSocket';
 import type { UserProfile, Track, Coordinates, ChatStatus, ChatConversation, IncomingChatRequest, NearbyUser, ChatPeer } from './types';
 
@@ -281,26 +282,36 @@ export default function App() {
 
         {/* Location status */}
         {!geo.position && (
-          <div className="px-4 flex-shrink-0">
-            {geo.error ? (
+          geo.unavailable ? (
+            <LocationFallback
+              accentColor={profile.color}
+              onLocate={(coords) => { geo.setManual(coords); }}
+              onRetryGPS={geo.request}
+            />
+          ) : geo.error ? (
+            <div className="px-4 flex-shrink-0">
               <div className="flex items-start gap-2 p-3 rounded-xl mb-2 text-xs text-red-300"
                 style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.15)' }}>
                 <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-red-400" />
                 {geo.error}
                 <button onClick={geo.request} className="ml-auto underline whitespace-nowrap">Réessayer</button>
               </div>
-            ) : geo.loading ? (
+            </div>
+          ) : geo.loading ? (
+            <div className="px-4 flex-shrink-0">
               <div className="flex items-center gap-2 p-3 rounded-xl mb-2 text-xs text-white/40" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                <Loader2 className="w-4 h-4 animate-spin" /> Localisation…
+                <Loader2 className="w-4 h-4 animate-spin" /> Localisation en cours…
               </div>
-            ) : (
+            </div>
+          ) : (
+            <div className="px-4 flex-shrink-0">
               <button onClick={geo.request}
                 className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl mb-2 text-sm font-semibold text-white transition-all active:scale-95"
                 style={{ background: `linear-gradient(135deg, ${profile.color}, #ec4899)` }}>
                 <Navigation className="w-4 h-4" /> Activer la localisation
               </button>
-            )}
-          </div>
+            </div>
+          )
         )}
 
         {/* Content — always nearby list */}
@@ -328,14 +339,25 @@ export default function App() {
             <MeloSongLockup markSize={30} textSize="text-4xl" className="mb-2" />
             <p className="text-sm text-white/40 font-medium">Découvre la musique autour de toi</p>
             <p className="text-xs text-white/25 max-w-xs mt-1 text-center">Active la géolocalisation pour voir les auditeurs à proximité</p>
-            {!geo.loading && !geo.error && (
+            {geo.unavailable ? (
+              <div className="w-full max-w-sm">
+                <LocationFallback
+                  accentColor={profile.color}
+                  onLocate={(coords) => { geo.setManual(coords); }}
+                  onRetryGPS={geo.request}
+                />
+              </div>
+            ) : !geo.loading && !geo.error ? (
               <button onClick={geo.request}
                 className="flex items-center gap-2 py-3 px-6 rounded-2xl font-semibold text-sm text-white transition-all active:scale-95 shadow-lg hover:opacity-90"
                 style={{ background: `linear-gradient(135deg, ${profile.color}, #ec4899)` }}>
                 <Navigation className="w-4 h-4" /> Activer la localisation
               </button>
+            ) : geo.loading ? (
+              <div className="flex items-center gap-2 text-sm text-white/40"><Loader2 className="w-4 h-4 animate-spin" /> Localisation…</div>
+            ) : (
+              <div className="flex items-center gap-2 text-xs text-red-400 max-w-xs text-center">{geo.error}</div>
             )}
-            {geo.loading && <div className="flex items-center gap-2 text-sm text-white/40"><Loader2 className="w-4 h-4 animate-spin" /> Localisation…</div>}
           </div>
         )}
 
