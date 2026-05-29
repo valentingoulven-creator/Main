@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Wifi, WifiOff, Navigation, AlertCircle, Loader2, UserCircle2, MapPin, Heart } from 'lucide-react';
 import { MeloSongLockup, MeloSongMark } from './components/MeloSongLogo';
 import SetupScreen from './components/SetupScreen';
+import AuthScreen from './components/AuthScreen';
 import NowPlaying from './components/NowPlaying';
 import TrackInput from './components/TrackInput';
 import NearbyList from './components/NearbyList';
@@ -24,6 +25,8 @@ import DiscoverTab from './components/DiscoverTab';
 import type { PublicLive } from './types';
 import { useSocket } from './hooks/useSocket';
 import type { UserProfile, Track, Coordinates, ChatStatus, ChatConversation, IncomingChatRequest, NearbyUser, ChatPeer, Rating } from './types';
+import { loadSession, logout } from './utils/auth';
+import type { Session } from './utils/auth';
 
 const PROFILE_KEY   = 'melo_profile';
 const JAM_KEY       = 'melo_jam_url';
@@ -43,6 +46,7 @@ const CHAT_STATUS_UI: Record<ChatStatus, { label: string; color: string; next: C
 };
 
 export default function App() {
+  const [session, setSession]       = useState<Session | null>(loadSession);
   const [profile, setProfile]       = useState<UserProfile | null>(loadProfile);
   const [myTrack, setMyTrack]       = useState<Track | null>(null);
   const [myJamUrl, setMyJamUrl]     = useState<string>(() => localStorage.getItem(JAM_KEY) ?? '');
@@ -265,7 +269,11 @@ export default function App() {
     if (openChatId === id) setOpenChatId(null);
   }, [socket, openChatId]);
 
-  if (!profile) return <SetupScreen onComplete={handleSetupComplete} />;
+  // ── Auth gate ──────────────────────────────────────────────────────────────
+  if (!session) return <AuthScreen onSuccess={(s) => setSession(s)} />;
+
+  // ── Profile gate ───────────────────────────────────────────────────────────
+  if (!profile) return <SetupScreen onComplete={handleSetupComplete} initialUsername={session.username} />;
 
   const chatStatusUI = CHAT_STATUS_UI[chatStatus];
   const openConvs = [...conversations.values()];
@@ -332,9 +340,9 @@ export default function App() {
           </button>
 
           {/* Reset */}
-          <button onClick={() => { localStorage.removeItem(PROFILE_KEY); setProfile(null); setJoined(false); }}
+          <button onClick={() => { localStorage.removeItem(PROFILE_KEY); logout(); setProfile(null); setSession(null); setJoined(false); }}
             className="w-7 h-7 rounded-lg flex items-center justify-center text-white/20
-              hover:text-white/50 hover:bg-white/10 transition-colors text-sm" title="Changer de compte">
+              hover:text-white/50 hover:bg-white/10 transition-colors text-sm" title="Se déconnecter">
             ↩
           </button>
           </div>{/* end user row */}

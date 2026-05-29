@@ -15,11 +15,11 @@ const INTERESTS_LIST = [
   'Art 🎨','Photo 📷','Voyages ✈️','Sport 🏃','Lecture 📚','Mode 👗','Tech 💻',
 ];
 
-interface Props { onComplete: (p: UserProfile) => void }
+interface Props { onComplete: (p: UserProfile) => void; initialUsername?: string }
 
-export default function SetupScreen({ onComplete }: Props) {
+export default function SetupScreen({ onComplete, initialUsername = '' }: Props) {
   const [step, setStep] = useState(1);
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState(initialUsername);
   const [color, setColor]       = useState(COLORS[0]);
   const [emoji, setEmoji]       = useState(EMOJIS[0]);
   const [bio, setBio]           = useState('');

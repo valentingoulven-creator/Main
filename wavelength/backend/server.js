@@ -306,6 +306,27 @@ function initMockUsers(lat, lng) {
   });
 }
 
+// ─── Auth store (in-memory + persisted to simple JSON) ───────────────────────
+
+const crypto = require('crypto');
+const fs     = require('fs');
+const ACCOUNTS_FILE = './accounts.json';
+
+let serverAccounts = [];
+try {
+  if (fs.existsSync(ACCOUNTS_FILE)) {
+    serverAccounts = JSON.parse(fs.readFileSync(ACCOUNTS_FILE, 'utf8'));
+  }
+} catch { serverAccounts = []; }
+
+function saveServerAccounts() {
+  try { fs.writeFileSync(ACCOUNTS_FILE, JSON.stringify(serverAccounts, null, 2)); } catch {}
+}
+
+function hashPwd(password, salt) {
+  return crypto.createHash('sha256').update(password + salt).digest('hex');
+}
+
 // ─── Ratings store ────────────────────────────────────────────────────────────
 // Map<targetId, Rating[]>
 const ratingsStore = new Map();
@@ -401,6 +422,31 @@ function pushAll() {
 }
 
 // ─── Socket.io ────────────────────────────────────────────────────────────────
+
+// ─── Auth REST endpoints ──────────────────────────────────────────────────────
+
+app.post('/api/register', (req, res) => {
+  const { email, username, password } = req.body ?? {};
+  if (!email || !username || !password) return res.status(400).json({ error: 'Champs manquants.' });
+  const emailLower = email.toLowerCase().trim();
+  if (serverAccounts.find(a => a.email === emailLower)) return res.status(409).json({ error: 'Email déjà utilisé.' });
+  const uid  = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const hash = hashPwd(password, uid);
+  serverAccounts.push({ uid, email: emailLower, username: username.trim(), passwordHash: hash, createdAt: Date.now() });
+  saveServerAccounts();
+  res.json({ ok: true, uid, username: username.trim() });
+});
+
+app.post('/api/login', (req, res) => {
+  const { email, password } = req.body ?? {};
+  if (!email || !password) return res.status(400).json({ error: 'Champs manquants.' });
+  const account = serverAccounts.find(a => a.email === email.toLowerCase().trim());
+  if (!account) return res.status(401).json({ error: 'Email inconnu.' });
+  if (hashPwd(password, account.uid) !== account.passwordHash) return res.status(401).json({ error: 'Mot de passe incorrect.' });
+  res.json({ ok: true, uid: account.uid, username: account.username });
+});
+
+app.get('/api/users/count', (_req, res) => res.json({ count: serverAccounts.length }));
 
 io.on('connection', (socket) => {
   console.log(`[+] ${socket.id}`);
