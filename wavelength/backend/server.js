@@ -203,6 +203,48 @@ const MOCK_DATA = [
     track: null,
     jamUrl: null,
   },
+
+  // ── 5 nouveaux bots ───────────────────────────────────────────────────────
+  {
+    username: 'Axel',    color: '#7c3aed', emoji: '🎚️', dist: 95,  angle: 1.1,
+    bio: 'Producer underground, trap et lo-fi 🌙', address: 'Paris 75010', birthDate: '2001-04-12',
+    interests: ['Hip-Hop 🎤', 'Électro 🥁', 'House 🎚️', 'Tech 💻'],
+    connectedApps: { spotify: 'axel_trap', youtube: '@axel_prod' },
+    track: { title: 'SICKO MODE', artist: 'Travis Scott', source: 'spotify', url: 'https://open.spotify.com/track/2xLMifQCjDGFmkHkpNLD9h' },
+    jamUrl: null,
+  },
+  {
+    username: 'Lena',    color: '#db2777', emoji: '🌸', dist: 210, angle: 3.9,
+    bio: 'Pianiste jazz, adepte des notes bleues 💙', address: 'Paris 75006', birthDate: '1999-07-30',
+    interests: ['Jazz 🎷', 'Classique 🎻', 'Art 🎨', 'Lecture 📚'],
+    connectedApps: { deezer: 'lena_jazz', spotify: 'lena_piano_jazz' },
+    track: { title: 'So What', artist: 'Miles Davis', source: 'youtube', url: 'https://www.youtube.com/watch?v=ylXk1LBvIqU' },
+    jamUrl: null,
+  },
+  {
+    username: 'Samir',   color: '#0891b2', emoji: '🎤', dist: 330, angle: 0.5,
+    bio: 'Rappeur en devenir, textes engagés ✊', address: 'Paris 75018', birthDate: '2002-11-15',
+    interests: ['Hip-Hop 🎤', 'R&B 🎶', 'Sport 🏃', 'Mode 👗'],
+    connectedApps: { youtube: '@samir_rap_paris', spotify: 'samir_rap' },
+    track: { title: 'Coeur de Paris', artist: 'Vald', source: 'spotify', url: null },
+    jamUrl: 'https://open.spotify.com/jam/demo-samir',
+  },
+  {
+    username: 'Océane',  color: '#059669', emoji: '🎸', dist: 140, angle: 5.2,
+    bio: 'Guitariste folk, grande voyageuse 🌍', address: 'Paris 75015', birthDate: '1998-03-08',
+    interests: ['Folk 🌿', 'Rock 🎸', 'Voyages ✈️', 'Nature 🌿'],
+    connectedApps: { spotify: 'oceane_folk', youtubemusic: '@oceane_guitar' },
+    track: { title: 'Fast Car', artist: 'Tracy Chapman', source: 'youtube', url: 'https://www.youtube.com/watch?v=AIOAlaACuv4' },
+    jamUrl: null,
+  },
+  {
+    username: 'Hugo',    color: '#ea580c', emoji: '🥁', dist: 75,  angle: 2.3,
+    bio: 'Batteur de funk et de soul 🕺 Groove addict', address: 'Paris 75011', birthDate: '1996-09-22',
+    interests: ['Funk 🎶', 'Soul 🎵', 'R&B 🎶', 'Danse 💃'],
+    connectedApps: { deezer: 'hugo_funk', spotify: 'hugo_drums_funk' },
+    track: { title: 'Superstition', artist: 'Stevie Wonder', source: 'spotify', url: 'https://open.spotify.com/track/1h0VcYnGUxJEBB3aV8gVoN' },
+    jamUrl: null,
+  },
 ];
 
 const MOCK_GREETINGS = [
@@ -239,7 +281,7 @@ let mockInitialized = false;
 function initMockUsers(lat, lng) {
   if (mockInitialized) return;
   mockInitialized = true;
-  mockUsers = MOCK_DATA.map((data) => {
+  mockUsers = MOCK_DATA.map((data, i) => {
     const dist = data.dist ?? 300;
     const angle = data.angle ?? Math.random() * 2 * Math.PI;
     const pos = offsetCoords(lat, lng, dist * Math.cos(angle), dist * Math.sin(angle));
