@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Users, MicOff, Mic, VideoOff, Video, StopCircle } from 'lucide-react';
 import type { UserProfile } from '../types';
 import type { LiveVisibility } from './LiveSetupModal';
+import LiveChat from './LiveChat';
 
 const STUN_SERVERS = {
   iceServers: [
@@ -37,6 +38,10 @@ export default function LiveBroadcast({
   const streamRef   = useRef<MediaStream | null>(null);
   const peersRef    = useRef<Map<string, RTCPeerConnection>>(new Map());
 
+  const [mySocketId] = useState(() => {
+    const s = ((window as unknown) as Record<string, unknown>)['__melo_socket__'] as { id?: string } | undefined;
+    return s?.id ?? 'broadcaster';
+  });
   const [step, setStep]         = useState<'preview' | 'live'>('preview');
   const [title, setTitle]       = useState('');
   const [muted, setMuted]       = useState(false);
@@ -186,11 +191,20 @@ export default function LiveBroadcast({
 
         {/* Title overlay */}
         {step === 'live' && (
-          <div className="absolute bottom-4 left-4 right-4">
+          <div className="absolute bottom-4 left-4 right-56">
             <div className="inline-block bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-xl text-sm text-white font-semibold">
               {title || `Live de ${profile.username}`}
             </div>
           </div>
+        )}
+
+        {/* Live Chat overlay (broadcaster side) */}
+        {step === 'live' && (
+          <LiveChat
+            broadcasterId={mySocketId}
+            profile={profile}
+            isOverlay
+          />
         )}
       </div>
 

@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Radio, Users, Music2, MapPin, ChevronUp, ChevronDown, Heart, MessageCircle, ExternalLink } from 'lucide-react';
-import type { PublicLive } from '../types';
+import type { PublicLive, UserProfile } from '../types';
 import { SpotifyLogo, YouTubeLogo } from './SourceLogo';
+import LiveChat from './LiveChat';
 
 function elapsed(start: number) {
   const s = Math.floor((Date.now() - start) / 1000);
@@ -12,14 +13,15 @@ function elapsed(start: number) {
 
 interface LiveCardProps {
   live: PublicLive;
-  isActive: boolean;
   onWatch: () => void;
   accentColor: string;
+  profile: UserProfile;
 }
 
-function LiveCard({ live, onWatch }: LiveCardProps) {
+function LiveCard({ live, onWatch, profile }: LiveCardProps) {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(Math.floor(Math.random() * 200 + 10));
+  const [showChat, setShowChat] = useState(false);
 
   function handleLike() {
     setLiked(l => !l);
@@ -127,9 +129,9 @@ function LiveCard({ live, onWatch }: LiveCardProps) {
             </button>
 
             {/* Chat */}
-            <button className="flex flex-col items-center gap-1">
-              <div className="w-11 h-11 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)' }}>
+            <button onClick={() => setShowChat(c => !c)} className="flex flex-col items-center gap-1">
+              <div className="w-11 h-11 rounded-full flex items-center justify-center transition-all"
+                style={{ background: showChat ? 'rgba(139,92,246,0.6)' : 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)' }}>
                 <MessageCircle className="w-5 h-5 text-white" />
               </div>
               <span className="text-xs text-white/80 font-semibold">Chat</span>
@@ -147,6 +149,15 @@ function LiveCard({ live, onWatch }: LiveCardProps) {
           </div>
         </div>
       </div>
+      {/* Live chat overlay */}
+      {showChat && (
+        <LiveChat
+          broadcasterId={live.id}
+          profile={profile}
+          isOverlay
+          onClose={() => setShowChat(false)}
+        />
+      )}
     </div>
   );
 }
@@ -156,9 +167,10 @@ interface Props {
   onWatch: (live: PublicLive) => void;
   onRefresh: () => void;
   accentColor: string;
+  profile: UserProfile;
 }
 
-export default function LiveFeed({ lives, onWatch, onRefresh, accentColor }: Props) {
+export default function LiveFeed({ lives, onWatch, onRefresh, accentColor, profile }: Props) {
   const [idx, setIdx] = useState(0);
   const touchStartY = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -232,7 +244,7 @@ export default function LiveFeed({ lives, onWatch, onRefresh, accentColor }: Pro
       {/* Slide animation */}
       <div className="absolute inset-0 transition-transform duration-180 ease-out"
         style={{ transform: animDir === 'up' ? 'translateY(-6%)' : animDir === 'down' ? 'translateY(6%)' : 'translateY(0)', opacity: animDir ? 0.5 : 1 }}>
-        <LiveCard key={live.id} live={live} isActive accentColor={accentColor} onWatch={() => onWatch(live)} />
+        <LiveCard key={live.id} live={live} accentColor={accentColor} onWatch={() => onWatch(live)} profile={profile} />
       </div>
 
       {/* Navigation arrows */}

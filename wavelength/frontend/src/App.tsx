@@ -586,6 +586,7 @@ export default function App() {
               onWatch={(live) => setWatchingLive(live as unknown as NearbyUser)}
               onRefresh={socket.getPublicLivesReq}
               accentColor={profile.color}
+              profile={profile}
             />
           </div>
         ) : (
@@ -776,6 +777,7 @@ export default function App() {
         <LiveViewer
           broadcaster={watchingLive as NearbyUser}
           myId=""
+          profile={profile}
           onClose={() => setWatchingLive(null)}
           onJoinLive={socket.joinLive}
           onLeaveLive={socket.leaveLive}

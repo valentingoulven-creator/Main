@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Users, Volume2, VolumeX, Heart } from 'lucide-react';
-import type { NearbyUser } from '../types';
+import type { NearbyUser, UserProfile } from '../types';
 import { DonateUser } from './DonateModal';
+import LiveChat from './LiveChat';
 
 const STUN_SERVERS = {
   iceServers: [
@@ -13,6 +14,7 @@ const STUN_SERVERS = {
 interface Props {
   broadcaster: NearbyUser;
   myId: string;
+  profile: UserProfile;
   onClose: () => void;
   onJoinLive:      (broadcasterId: string) => void;
   onLeaveLive:     (broadcasterId: string) => void;
@@ -24,7 +26,7 @@ interface Props {
 }
 
 export default function LiveViewer({
-  broadcaster, onClose,
+  broadcaster, profile, onClose,
   onJoinLive, onLeaveLive,
   onSendAnswer, onSendIce,
   onOfferReceived, onIceReceived, onLiveEnded,
@@ -163,6 +165,13 @@ export default function LiveViewer({
           </div>
         )}
       </div>
+      {/* Live chat overlay */}
+      <LiveChat
+        broadcasterId={broadcaster.id}
+        profile={profile}
+        isOverlay
+      />
+
       {/* Donate modal */}
       {showDonate && (
         <DonateUser user={broadcaster as NearbyUser} onClose={() => setShowDonate(false)} />

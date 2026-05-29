@@ -727,6 +727,31 @@ io.on('connection', (socket) => {
     io.sockets.sockets.get(broadcasterId)?.emit('viewer_left', { viewerId: socket.id });
   });
 
+  // ── Live Chat ────────────────────────────────────────────────────────────────
+
+  socket.on('live_chat_join', ({ broadcasterId }) => {
+    socket.join(`livechat:${broadcasterId}`);
+  });
+
+  socket.on('live_chat_leave', ({ broadcasterId }) => {
+    socket.leave(`livechat:${broadcasterId}`);
+  });
+
+  socket.on('live_chat_message', ({ broadcasterId, text, username, color, emoji, photo }) => {
+    if (!text?.trim()) return;
+    const msg = {
+      id:        `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      userId:    socket.id,
+      username:  username ?? 'Anonyme',
+      color:     color    ?? '#8b5cf6',
+      emoji:     emoji    ?? '🎵',
+      photo:     photo    ?? null,
+      text:      text.trim().slice(0, 200),
+      timestamp: Date.now(),
+    };
+    io.to(`livechat:${broadcasterId}`).emit('live_chat_message', msg);
+  });
+
   // WebRTC signaling relay
   socket.on('live_offer',     ({ to, offer })     => io.sockets.sockets.get(to)?.emit('live_offer',     { from: socket.id, offer }));
   socket.on('live_answer',    ({ to, answer })    => io.sockets.sockets.get(to)?.emit('live_answer',    { from: socket.id, answer }));
