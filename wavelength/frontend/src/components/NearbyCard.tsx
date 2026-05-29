@@ -79,6 +79,11 @@ export default function NearbyCard({ user, onClick, onChat, onWatchLive, onJoinY
           </div>
 
           {/* Track — plus grand et mis en valeur */}
+          {/* Bio — milieu de la carte */}
+          {user.bio && (
+            <p className="text-xs text-white/45 leading-snug truncate mt-0.5 mb-1">{user.bio}</p>
+          )}
+
           {track ? (
             <div className="flex items-center gap-2 min-w-0">
               {/* Waveform */}
