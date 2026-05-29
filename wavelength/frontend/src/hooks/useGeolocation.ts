@@ -33,6 +33,16 @@ export function useGeolocation() {
           2: "Position GPS indisponible sur cet appareil.",
           3: "Délai expiré. Réessaie.",
         };
+        // Auto-fallback to Paris when GPS is simply unavailable on device
+        if (isUnavailable) {
+          setState({
+            position: { lat: 48.8566, lng: 2.3522 }, // Paris centre
+            error: null,
+            loading: false,
+            unavailable: false,
+          });
+          return;
+        }
         setState(s => ({
           ...s,
           loading: false,
