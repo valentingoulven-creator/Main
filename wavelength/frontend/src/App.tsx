@@ -25,7 +25,9 @@ import type { LiveVisibility } from './components/LiveSetupModal';
 import LiveViewer from './components/LiveViewer';
 import DiscoverTab from './components/DiscoverTab';
 import SpotifyConnect from './components/SpotifyConnect';
+import YouTubeConnect from './components/YouTubeConnect';
 import EmailVerifyBanner, { VerifiedBadge } from './components/EmailVerifyBanner';
+import { handleYtCallback, isYtConnected as ytConnected } from './utils/youtubeAuth';
 import { useSpotifyNowPlaying } from './hooks/useSpotifyNowPlaying';
 import { handleCallback, isConnected as spotifyConnected } from './utils/spotifyAuth';
 import type { PublicLive } from './types';
@@ -71,6 +73,8 @@ export default function App() {
   const [showDonateApp, setShowDonateApp]         = useState(false);
   const [showSpotifyConnect, setShowSpotifyConnect] = useState(false);
   const [spotifyLinked, setSpotifyLinked]           = useState(spotifyConnected);
+  const [showYouTubeConnect, setShowYouTubeConnect] = useState(false);
+  const [youtubeLinked, setYoutubeLinked]           = useState(ytConnected);
   const [showLiveSetup, setShowLiveSetup]         = useState(false);
   const [showLiveBroadcast, setShowLiveBroadcast] = useState(false);
   const [liveSetupData, setLiveSetupData]         = useState<{ title: string; visibility: LiveVisibility } | null>(null);
@@ -94,16 +98,15 @@ export default function App() {
 
   // ── Spotify OAuth callback ──────────────────────────────────────────────────
   useEffect(() => {
-    if (window.location.pathname === '/spotify/callback') {
-      const code = new URLSearchParams(window.location.search).get('code');
-      if (code) {
-        handleCallback(code).then(ok => {
-          setSpotifyLinked(ok);
-          window.history.replaceState({}, '', '/');
-        });
-      } else {
-        window.history.replaceState({}, '', '/');
-      }
+    const path = window.location.pathname;
+    const code = new URLSearchParams(window.location.search).get('code');
+
+    if (path === '/spotify/callback') {
+      if (code) handleCallback(code).then(ok => { setSpotifyLinked(ok); });
+      window.history.replaceState({}, '', '/');
+    } else if (path === '/youtube/callback') {
+      if (code) handleYtCallback(code).then(ok => { setYoutubeLinked(ok); });
+      window.history.replaceState({}, '', '/');
     }
   }, []);
 
@@ -423,42 +426,58 @@ export default function App() {
         <div className="px-4 py-3 flex-shrink-0">
           <div className="text-xs font-semibold text-white/30 uppercase tracking-wider mb-2">J'écoute en ce moment</div>
 
-          {/* Spotify connection CTA — prominent when not connected */}
-          {!spotifyLinked ? (
-            <button onClick={() => setShowSpotifyConnect(true)}
-              className="w-full flex items-center gap-3 p-3.5 rounded-2xl mb-2 transition-all hover:opacity-90 active:scale-[0.99]"
-              style={{ background: 'rgba(29,185,84,0.08)', border: '1.5px dashed rgba(29,185,84,0.3)' }}>
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: 'rgba(29,185,84,0.15)' }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          {/* Platform connections */}
+          <div className="flex gap-2 mb-2">
+            {/* Spotify */}
+            {!spotifyLinked ? (
+              <button onClick={() => setShowSpotifyConnect(true)}
+                className="flex-1 flex items-center gap-2 p-2.5 rounded-xl transition-all hover:opacity-90 active:scale-[0.99]"
+                style={{ background: 'rgba(29,185,84,0.08)', border: '1.5px dashed rgba(29,185,84,0.3)' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
                   <circle cx="12" cy="12" r="12" fill="#1DB954"/>
                   <path d="M17.25 10.63c-3.01-1.78-7.97-1.95-10.84-1.08a.97.97 0 1 0 .56 1.86c2.47-.75 6.58-.6 9.17.91a.97.97 0 0 0 1.11-1.69z" fill="white"/>
                   <path d="M16.65 13.58a.81.81 0 0 0-1.12-.27c-2.5-1.54-6.3-1.98-9.26-1.08a.81.81 0 0 0 .47 1.55c2.56-.78 5.75-.33 7.91 1.07a.81.81 0 0 0 1-.27z" fill="white"/>
                   <path d="M15.89 16.49a.65.65 0 0 0-.9-.22 12.3 12.3 0 0 0-7.5-.87.65.65 0 1 0 .29 1.27 11 11 0 0 1 6.69.77.65.65 0 0 0 .92-.95z" fill="white"/>
                 </svg>
-              </div>
-              <div className="flex-1 min-w-0 text-left">
-                <div className="text-sm font-bold" style={{ color: '#1DB954' }}>Connecter Spotify</div>
-                <div className="text-xs text-white/40 mt-0.5">Partage automatiquement ce que tu écoutes</div>
-              </div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M9 18l6-6-6-6" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </button>
-          ) : (
-            /* Spotify connected — show sync status + quick manage */
-            <button onClick={() => setShowSpotifyConnect(true)}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl mb-2 transition-all hover:opacity-80"
-              style={{ background: 'rgba(29,185,84,0.06)', border: '1px solid rgba(29,185,84,0.2)' }}>
-              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${spotifyTrack?.isPlaying ? 'bg-green-400 animate-pulse' : 'bg-green-600'}`} />
-              <span className="text-xs font-semibold" style={{ color: '#1DB954' }}>
-                {spotifyTrack?.isPlaying ? `Spotify — ${spotifyTrack.title}` : 'Spotify connecté'}
-              </span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="ml-auto flex-shrink-0">
-                <path d="M9 18l6-6-6-6" stroke="rgba(29,185,84,0.5)" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </button>
-          )}
+                <div className="text-left min-w-0">
+                  <div className="text-xs font-bold truncate" style={{ color: '#1DB954' }}>+ Spotify</div>
+                  <div className="text-xs text-white/30 leading-tight">Partage auto</div>
+                </div>
+              </button>
+            ) : (
+              <button onClick={() => setShowSpotifyConnect(true)}
+                className="flex-1 flex items-center gap-2 px-2.5 py-2 rounded-xl transition-all hover:opacity-80"
+                style={{ background: 'rgba(29,185,84,0.07)', border: '1px solid rgba(29,185,84,0.25)' }}>
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${spotifyTrack?.isPlaying ? 'bg-green-400 animate-pulse' : 'bg-green-700'}`} />
+                <span className="text-xs font-semibold truncate" style={{ color: '#1DB954' }}>
+                  {spotifyTrack?.isPlaying ? spotifyTrack.title : 'Spotify ✓'}
+                </span>
+              </button>
+            )}
+
+            {/* YouTube */}
+            {!youtubeLinked ? (
+              <button onClick={() => setShowYouTubeConnect(true)}
+                className="flex-1 flex items-center gap-2 p-2.5 rounded-xl transition-all hover:opacity-90 active:scale-[0.99]"
+                style={{ background: 'rgba(255,0,0,0.07)', border: '1.5px dashed rgba(255,0,0,0.3)' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
+                  <rect width="24" height="24" rx="5" fill="#FF0000"/>
+                  <path d="M9.85 15.02V8.98L15.52 12l-5.67 3.02z" fill="white"/>
+                </svg>
+                <div className="text-left min-w-0">
+                  <div className="text-xs font-bold truncate" style={{ color: '#ff4444' }}>+ YouTube</div>
+                  <div className="text-xs text-white/30 leading-tight">Partage vidéos</div>
+                </div>
+              </button>
+            ) : (
+              <button onClick={() => setShowYouTubeConnect(true)}
+                className="flex-1 flex items-center gap-2 px-2.5 py-2 rounded-xl transition-all hover:opacity-80"
+                style={{ background: 'rgba(255,0,0,0.07)', border: '1px solid rgba(255,0,0,0.2)' }}>
+                <span className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0" />
+                <span className="text-xs font-semibold truncate" style={{ color: '#ff4444' }}>YouTube ✓</span>
+              </button>
+            )}
+          </div>
 
           <NowPlaying profile={profile} track={myTrack} jamUrl={myJamUrl} onEdit={() => setShowTrackInput(true)} />
           {/* Go Live button */}
@@ -688,6 +707,14 @@ export default function App() {
         <ChatWindow key={conv.peer.id} conv={conv} onSend={(text) => handleSendMessage(conv.peer.id, text)}
           onClose={() => handleCloseChat(conv.peer.id)} myColor={profile.color} index={i} />
       ))}
+
+      {/* YouTube connect */}
+      {showYouTubeConnect && (
+        <YouTubeConnect
+          onShare={(track) => { handleTrackSave(track); }}
+          onClose={() => { setShowYouTubeConnect(false); setYoutubeLinked(ytConnected()); }}
+        />
+      )}
 
       {/* Spotify connect */}
       {showSpotifyConnect && (
