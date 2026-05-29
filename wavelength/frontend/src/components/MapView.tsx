@@ -89,10 +89,18 @@ export default function MapView({ myPosition, profile, nearbyUsers, focusPositio
         }
       `}</style>
       <MapContainer center={center} zoom={15} style={{ width: '100%', height: '100%' }} zoomControl>
-        {/* CartoDB Dark Matter — minimaliste et élégant */}
+        {/* Esri World Dark Gray — élégant, propre, peu de détails */}
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>'
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+          attribution='© <a href="https://www.esri.com/">Esri</a>'
+          maxZoom={16}
+        />
+        {/* Labels overlay */}
+        <TileLayer
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}"
+          attribution=""
+          maxZoom={16}
+          opacity={0.9}
         />
 
         {focusPosition && <FlyTo center={focusPosition} />}
