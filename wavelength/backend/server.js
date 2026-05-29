@@ -463,9 +463,9 @@ function getPublicUser(user) {
 
 function getNearbyUsers(forId, position, radiusMeters) {
   if (!position) return [];
-  const maxRadius = Math.min(radiusMeters, 5000); // hard cap at 5km
+  const maxRadius = Math.min(radiusMeters, 5000);
   return [...connectedUsers.values(), ...mockUsers]
-    .filter(u => u.id !== forId && u.position)
+    .filter(u => u.id !== forId && u.position && u.chatStatus !== 'invisible') // invisible users hidden
     .map(u => ({
       ...getPublicUser(u),
       distance: Math.round(haversine(position.lat, position.lng, u.position.lat, u.position.lng)),
@@ -695,7 +695,7 @@ io.on('connection', (socket) => {
 
     const target = connectedUsers.get(to);
     if (!target) { socket.emit('chat_unavailable', { to }); return; }
-    if (target.chatStatus === 'dnd') {
+    if (target.chatStatus === 'invisible' || target.chatStatus === 'dnd') {
       socket.emit('chat_declined', { from: { id: target.id, username: target.username, color: target.color, emoji: target.emoji }, reason: 'dnd' });
       return;
     }

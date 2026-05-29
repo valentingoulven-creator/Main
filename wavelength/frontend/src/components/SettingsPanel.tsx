@@ -18,9 +18,11 @@ interface Props {
   onLogout: () => void;
   onDeleteAccount: () => void;
   onClose: () => void;
+  radius: number;
+  onRadiusChange: (r: number) => void;
 }
 
-export default function SettingsPanel({ username, email, referralCode, blockedUsers, onUnblock, onLogout, onDeleteAccount, onClose }: Props) {
+export default function SettingsPanel({ username, email, referralCode, blockedUsers, onUnblock, onLogout, onDeleteAccount, onClose, radius, onRadiusChange }: Props) {
   const [section, setSection] = useState<Section>('main');
   const [copied, setCopied]   = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -153,7 +155,45 @@ export default function SettingsPanel({ username, email, referralCode, blockedUs
               <ToggleRow icon={<Globe className="w-4 h-4" />} color="#10b981"
                 label="Partage de position" sub="Visible par les gens proches"
                 value={true} onChange={() => {}} />
-              <div className="mt-4 p-3 rounded-xl text-xs text-white/30"
+
+              {/* Radius */}
+              <div className="px-4 py-3 rounded-2xl"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'rgba(6,182,212,0.2)', color: '#06b6d4' }}>
+                    <Globe className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-semibold text-white">Rayon de recherche</div>
+                    <div className="text-xs" style={{ color: '#06b6d4' }}>
+                      {radius < 1000 ? `${radius} m` : `${(radius/1000).toFixed(radius % 1000 === 0 ? 0 : 1)} km`}
+                    </div>
+                  </div>
+                </div>
+                <input type="range" min={50} max={5000} step={50}
+                  value={radius}
+                  onChange={e => onRadiusChange(Number(e.target.value))}
+                  className="w-full h-1.5 rounded-full appearance-none cursor-pointer mb-2"
+                  style={{
+                    accentColor: '#06b6d4',
+                    background: `linear-gradient(to right, #06b6d4 ${(radius / 5000) * 100}%, rgba(255,255,255,0.15) ${(radius / 5000) * 100}%)`,
+                  }}
+                />
+                <div className="flex gap-1">
+                  {[500, 1000, 5000].map(v => (
+                    <button key={v} onClick={() => onRadiusChange(v)}
+                      className="flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all"
+                      style={radius === v
+                        ? { background: '#06b6d4', color: '#fff' }
+                        : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)' }}>
+                      {v < 1000 ? `${v}m` : `${v/1000}km`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-2 p-3 rounded-xl text-xs text-white/30"
                 style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                 Les paramètres sont sauvegardés automatiquement sur cet appareil.
               </div>

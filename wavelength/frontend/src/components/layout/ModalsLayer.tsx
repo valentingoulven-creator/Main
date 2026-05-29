@@ -165,7 +165,7 @@ export default function ModalsLayer(p: Props) {
           onChat={p.onChatUser.bind(null, p.viewedProfile)}
           onRate={p.onRateUser}
           onTip={() => p.onTipUser()}
-          canChat={p.viewedProfile.chatStatus !== 'dnd'}
+          canChat={p.viewedProfile.chatStatus !== 'invisible'}
           ratings={p.ratingsCache[p.viewedProfile.id]}
           myRating={p.myRatings[p.viewedProfile.id]} />
       )}
@@ -212,7 +212,9 @@ export default function ModalsLayer(p: Props) {
           onUnblock={p.onUnblock}
           onLogout={p.onLogout}
           onDeleteAccount={p.onDeleteAccount}
-          onClose={p.onCloseSettings} />
+          onClose={p.onCloseSettings}
+          radius={0}
+          onRadiusChange={() => {}} />
       )}
 
       {/* Chat notification */}

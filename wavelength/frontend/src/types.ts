@@ -39,7 +39,7 @@ export interface UserProfile {
   connectedApps?: ConnectedApps;
 }
 
-export type ChatStatus = 'available' | 'busy' | 'dnd';
+export type ChatStatus = 'available' | 'invisible';
 
 export interface NearbyUser {
   id: string;

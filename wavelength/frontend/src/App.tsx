@@ -51,13 +51,14 @@ function loadProfile(): UserProfile | null {
   try { return JSON.parse(localStorage.getItem(PROFILE_KEY) ?? 'null'); } catch { return null; }
 }
 function loadChatStatus(): ChatStatus {
-  return (localStorage.getItem(CHAT_STATUS_KEY) as ChatStatus) ?? 'available';
+  const stored = localStorage.getItem(CHAT_STATUS_KEY) as ChatStatus;
+  if (stored === 'available' || stored === 'invisible') return stored;
+  return 'available'; // migrate old busy/dnd values
 }
 
 const CHAT_STATUS_UI: Record<ChatStatus, { label: string; color: string; next: ChatStatus }> = {
-  available: { label: 'Disponible',      color: '#10b981', next: 'busy'      },
-  busy:      { label: 'Occupé·e',        color: '#f59e0b', next: 'dnd'       },
-  dnd:       { label: 'Ne pas déranger', color: '#ef4444', next: 'available' },
+  available:  { label: 'Disponible', color: '#10b981', next: 'invisible' },
+  invisible:  { label: 'Invisible',  color: '#64748b', next: 'available' },
 };
 
 export default function App() {
@@ -365,7 +366,7 @@ export default function App() {
       <aside className={`flex-col border-r overflow-hidden flex-shrink-0
         ${mobileTab === 'nearby' ? 'flex' : 'hidden'} md:flex`}
         style={{ borderColor: 'rgba(255,255,255,0.07)', width: '100%', maxWidth: '100%' }}>
-        <div className="flex flex-col h-full md:w-[400px]" style={{ width: '100%' }}>
+        <div className="flex flex-col h-full md:w-[400px] overflow-y-auto" style={{ width: '100%', scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
 
         {/* Header */}
         <header className="flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
@@ -383,6 +384,16 @@ export default function App() {
             <div className="flex-1 flex justify-center">
               <MeloSongLockup markSize={18} textSize="text-base" />
             </div>
+
+            {/* Favoris — left of gear */}
+            <button onClick={() => setView(view === 'favorites' ? 'nearby' : 'favorites')}
+              title="Mes favoris"
+              className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10 active:scale-95 flex-shrink-0"
+              style={view === 'favorites'
+                ? { background: 'rgba(251,191,36,0.2)', border: '1px solid rgba(251,191,36,0.4)' }
+                : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <span style={{ fontSize: 16, lineHeight: 1 }}>⭐</span>
+            </button>
 
             {/* Settings roue crantée — droite */}
             <button
@@ -514,15 +525,28 @@ export default function App() {
           <NowPlaying profile={profile} track={myTrack} jamUrl={myJamUrl}
             onEdit={() => setShowTrackInput(true)}
             onOpenSpotify={() => setShowSpotifyConnect(true)} />
-          {/* Go Live button */}
+          {/* Go Live button — styled */}
           <button onClick={() => amLive ? setShowLiveBroadcast(true) : setShowLiveSetup(true)}
-            className="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold text-white transition-all active:scale-95 hover:opacity-90"
+            className="mt-2 w-full flex items-center justify-center gap-2.5 py-3 rounded-2xl font-black text-sm text-white transition-all active:scale-95 hover:opacity-90 shadow-lg"
             style={amLive
-              ? { background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', color: '#ef4444' }
-              : { background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444' }
+              ? { background: 'linear-gradient(135deg, #ef4444, #dc2626)', boxShadow: '0 4px 16px rgba(239,68,68,0.4)' }
+              : { background: 'linear-gradient(135deg, rgba(239,68,68,0.85), rgba(220,38,38,0.85))', boxShadow: '0 4px 12px rgba(239,68,68,0.25)' }
             }>
-            <span className={`w-2 h-2 bg-red-500 rounded-full ${amLive ? 'animate-pulse' : ''}`} />
-            {amLive ? `En direct — ${liveViewers} spectateur${liveViewers > 1 ? 's' : ''}` : 'Démarrer un Live'}
+            {amLive ? (
+              <>
+                <span className="w-2.5 h-2.5 bg-white rounded-full animate-pulse flex-shrink-0" />
+                EN DIRECT · {liveViewers} spectateur{liveViewers > 1 ? 's' : ''}
+              </>
+            ) : (
+              <>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="3" fill="white"/>
+                  <path d="M8.5 8.5a5 5 0 0 0 0 7" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M15.5 8.5a5 5 0 0 1 0 7" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+                Démarrer un Live
+              </>
+            )}
           </button>
         </div>
 
@@ -559,18 +583,17 @@ export default function App() {
           </div>
         )}
 
-        {/* Tabs: Proximité / Favoris / Découvrir */}
+        {/* Tabs: Proximité / Découvrir */}
         <div className="flex gap-1 px-4 pb-2 flex-shrink-0">
           {([
-            ['nearby',    '🎵', 'Proximité'],
-            ['favorites', '⭐', 'Favoris'],
-            ['discover',  '🔴', 'Découvrir'],
+            ['nearby',   '🎵', 'Proximité'],
+            ['discover', '🔴', 'Découvrir'],
           ] as const).map(([id, icon, label]) => (
             <button key={id} onClick={() => setView(id as 'nearby' | 'discover')}
-              className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-semibold transition-all duration-200"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200"
               style={view === id
-                ? { background: id === 'discover' ? 'rgba(239,68,68,0.2)' : id === 'favorites' ? 'rgba(251,191,36,0.2)' : profile.color + '22',
-                    color: id === 'discover' ? '#ef4444' : id === 'favorites' ? '#fbbf24' : profile.color }
+                ? { background: id === 'discover' ? 'rgba(239,68,68,0.2)' : profile.color + '22',
+                    color: id === 'discover' ? '#ef4444' : profile.color }
                 : { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.35)' }}>
               {icon} {label}
               {id === 'discover' && socket.publicLives.length > 0 && (
@@ -584,26 +607,24 @@ export default function App() {
 
         {/* Content */}
         <div className="flex-1 min-h-0 px-4 pb-4 overflow-hidden flex flex-col">
-          {view === 'nearby' ? (
+          {view === 'favorites' ? (
+            <FavoritesList
+              favorites={favorites}
+              nearbyUsers={socket.nearbyUsers}
+              onChat={(f) => handleStartChat(f as unknown as NearbyUser)}
+              onRemove={(id) => { removeFav(id); setFavorites(loadFavorites()); }}
+              accentColor={profile.color}
+            />
+          ) : view === 'nearby' ? (
             <NearbyList
               users={socket.nearbyUsers}
               radius={radius}
-              onRadiusChange={handleRadiusChange}
               onSelectUser={(pos) => setFocusPosition(pos)}
               onChatUser={handleStartChat}
               onViewProfile={handleOpenProfile}
               onWatchLive={(user) => setWatchingLive(user)}
               onJoinYT={handleJoinYTSession}
               myChatStatus={chatStatus}
-              accentColor={profile.color}
-            />
-          ) : view === 'favorites' ? (
-            <FavoritesList
-            key={Date.now() % 10000 /* re-render when tab becomes active */}
-              favorites={favorites}
-              nearbyUsers={socket.nearbyUsers}
-              onChat={(f) => handleStartChat(f as unknown as NearbyUser)}
-              onRemove={(id) => { removeFav(id); setFavorites(loadFavorites()); }}
               accentColor={profile.color}
             />
           ) : (
@@ -765,7 +786,7 @@ export default function App() {
           onChat={() => { handleStartChat(viewedProfile); setViewedProfile(null); }}
           onRate={() => { setRatingTarget(viewedProfile); setViewedProfile(null); }}
           onTip={() => { setDonateTarget(viewedProfile); setViewedProfile(null); }}
-          canChat={viewedProfile.chatStatus !== 'dnd'}
+          canChat={viewedProfile.chatStatus !== 'invisible'}
           ratings={ratingsCache[viewedProfile.id]}
           myRating={myRatings[viewedProfile.id]}
         />
@@ -832,6 +853,8 @@ export default function App() {
           onLogout={() => { localStorage.removeItem(PROFILE_KEY); logout(); setProfile(null); setSession(null); setJoined(false); setShowSettings(false); }}
           onDeleteAccount={() => { clearAllData(); logout(); setProfile(null); setSession(null); setJoined(false); setShowSettings(false); }}
           onClose={() => setShowSettings(false)}
+          radius={radius}
+          onRadiusChange={handleRadiusChange}
         />
       )}
 

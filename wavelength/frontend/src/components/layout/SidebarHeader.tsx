@@ -4,9 +4,8 @@ import { VerifiedBadge } from '../EmailVerifyBanner';
 import type { UserProfile, ChatStatus } from '../../types';
 
 const CHAT_STATUS_UI: Record<ChatStatus, { label: string; color: string; next: ChatStatus }> = {
-  available: { label: 'Disponible',      color: '#10b981', next: 'busy'      },
-  busy:      { label: 'Occupé·e',        color: '#f59e0b', next: 'dnd'       },
-  dnd:       { label: 'Ne pas déranger', color: '#ef4444', next: 'available' },
+  available:  { label: 'Disponible', color: '#10b981', next: 'invisible' },
+  invisible:  { label: 'Invisible',  color: '#64748b', next: 'available' },
 };
 
 interface Props {

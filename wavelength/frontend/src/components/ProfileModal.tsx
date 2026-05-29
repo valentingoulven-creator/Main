@@ -93,10 +93,10 @@ export default function ProfileModal({ user, onClose, onChat, onRate, onTip, can
                 {user.chatStatus && (
                   <span className="text-xs px-1.5 py-0.5 rounded-full font-medium"
                     style={{
-                      background: user.chatStatus === 'available' ? 'rgba(16,185,129,0.15)' : user.chatStatus === 'busy' ? 'rgba(245,158,11,0.15)' : 'rgba(239,68,68,0.15)',
-                      color: user.chatStatus === 'available' ? '#10b981' : user.chatStatus === 'busy' ? '#f59e0b' : '#ef4444',
+                      background: user.chatStatus === 'available' ? 'rgba(16,185,129,0.15)' : 'rgba(100,116,139,0.15)',
+                      color: user.chatStatus === 'available' ? '#10b981' : '#64748b',
                     }}>
-                    {user.chatStatus === 'available' ? '● Disponible' : user.chatStatus === 'busy' ? '● Occupé·e' : '● DND'}
+                    {user.chatStatus === 'available' ? '● Disponible' : '● Invisible'}
                   </span>
                 )}
               </div>
@@ -264,7 +264,7 @@ export default function ProfileModal({ user, onClose, onChat, onRate, onTip, can
               transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 active:scale-95"
             style={{ background: canChat ? `linear-gradient(135deg, ${user.color}, #ec4899)` : 'rgba(255,255,255,0.08)' }}>
             <MessageCircle className="w-4 h-4" />
-            {user.chatStatus === 'dnd' ? 'Ne veut pas être dérangé·e' : 'Discuter'}
+            {user.chatStatus === 'invisible' ? 'Ne veut pas être dérangé·e' : 'Discuter'}
           </button>
         </div>
       </div>

@@ -17,14 +17,16 @@ function formatDist(m: number) {
 }
 
 const STATUS_DOT: Record<string, string> = {
-  available: '#10b981',
-  busy:      '#f59e0b',
-  dnd:       '#ef4444',
+  available:  '#10b981',
+  invisible:  '#64748b',
+  // legacy
+  busy:       '#f59e0b',
+  dnd:        '#64748b',
 };
 
 export default function NearbyCard({ user, onClick, onChat, onWatchLive, onJoinYT }: Props) {
   const { track } = user;
-  const canChat = user.chatStatus !== 'dnd';
+  const canChat = user.chatStatus === 'available' || !user.chatStatus;
   const statusDot = STATUS_DOT[user.chatStatus ?? 'available'];
   const [fav, setFav] = useState(isFavorite(user.id));
 
