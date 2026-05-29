@@ -89,11 +89,10 @@ export default function MapView({ myPosition, profile, nearbyUsers, focusPositio
         }
       `}</style>
       <MapContainer center={center} zoom={15} style={{ width: '100%', height: '100%' }} zoomControl>
-        {/* Tuiles OpenStreetMap France (noms en français) + filtre dark */}
+        {/* CartoDB Dark Matter — minimaliste et élégant */}
         <TileLayer
-          url="https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png"
-          attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributeurs, rendu par <a href="https://tile.openstreetmap.fr/">OSM France</a>'
-          className="map-tiles-dark"
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>'
         />
 
         {focusPosition && <FlyTo center={focusPosition} />}

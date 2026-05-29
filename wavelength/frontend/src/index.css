@@ -66,10 +66,6 @@ html, body, #root {
   font-family: 'Inter', sans-serif;
 }
 
-/* Tuiles OSM France → style sombre (filtre sur les images de tuiles uniquement) */
-.map-tiles-dark img {
-  filter: invert(1) hue-rotate(200deg) brightness(0.82) saturate(0.85);
-}
 .leaflet-control-zoom {
   border: none !important;
   box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;

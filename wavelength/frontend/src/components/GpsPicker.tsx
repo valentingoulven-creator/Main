@@ -221,9 +221,8 @@ export default function GpsPicker({ accentColor, onConfirm, onClose }: Props) {
           zoomControl={true}
         >
           <TileLayer
-            url="https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png"
-            attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> — <a href="https://tile.openstreetmap.fr/">OSM France</a>'
-            className="map-tiles-dark"
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>'
           />
           {flyTo && <FlyTo center={flyTo} />}
           <DraggablePin color={accentColor} onChange={handleMapPick} />
