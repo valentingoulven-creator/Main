@@ -316,83 +316,86 @@ export default function App() {
         style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
 
         {/* Header */}
-        <header className="flex-shrink-0">
+        <header className="flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           {/* App wordmark */}
-          <div className="flex items-center justify-center px-4 pt-4 pb-2">
-            <MeloSongLockup markSize={22} textSize="text-xl" />
-          </div>
-          {/* User row */}
-          <div className="flex items-center gap-2 px-4 pb-3"
-          style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-
-          {/* Avatar — click to edit profile */}
-          <button onClick={() => setShowProfileEditor(true)} className="relative flex-shrink-0 group">
-            {profile.photos?.[0] ? (
-              <img src={profile.photos[0]} className="w-9 h-9 rounded-full object-cover ring-2 ring-transparent group-hover:ring-white/30 transition-all" />
-            ) : (
-              <div className="w-9 h-9 rounded-full flex items-center justify-center text-lg group-hover:ring-2 group-hover:ring-white/30 transition-all"
-                style={{ background: profile.color }}>{profile.emoji}</div>
-            )}
-          </button>
-
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-bold text-white leading-none truncate">{profile.username}</div>
-            <div className="text-xs leading-none mt-0.5 text-white/30">membre MeloSong</div>
+          <div className="flex items-center justify-center pt-3 pb-1">
+            <MeloSongLockup markSize={18} textSize="text-base" />
           </div>
 
-          {/* Chat status */}
-          <button onClick={handleChatStatusCycle}
-            className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-full transition-all hover:opacity-80"
-            style={{ background: chatStatusUI.color + '18', border: `1px solid ${chatStatusUI.color}33` }}
-            title="Changer ta disponibilité">
-            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: chatStatusUI.color }} />
-            <span style={{ color: chatStatusUI.color }} className="font-medium hidden sm:inline">{chatStatusUI.label}</span>
-          </button>
+          {/* Profile — photo large + nom en dessous */}
+          <div className="flex flex-col items-center pb-3 px-4 pt-2">
+            <button onClick={() => setShowProfileEditor(true)} className="relative group mb-2">
+              {/* Grande photo */}
+              {profile.photos?.[0] ? (
+                <img src={profile.photos[0]}
+                  className="w-20 h-20 rounded-full object-cover shadow-xl transition-all group-hover:brightness-90"
+                  style={{ border: `3px solid ${profile.color}` }} />
+              ) : (
+                <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl shadow-xl transition-all group-hover:opacity-80"
+                  style={{ background: profile.color, border: `3px solid ${profile.color}99` }}>
+                  {profile.emoji}
+                </div>
+              )}
+              {/* Edit overlay */}
+              <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <UserCircle2 className="w-6 h-6 text-white" />
+              </div>
+              {/* Status dot */}
+              <span className="absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full border-2 border-[#0d0d1a]"
+                style={{ background: chatStatusUI.color }} />
+            </button>
 
-          {/* Connection */}
-          <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full
-            ${socket.connected ? 'text-emerald-400' : 'text-red-400'}`}
-            style={{ background: socket.connected ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)' }}>
-            {socket.connected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+            {/* Nom en dessous */}
+            <div className="text-base font-black text-white leading-tight">{profile.username}</div>
+            <div className="text-xs text-white/35 mt-0.5">membre MeloSong</div>
+
+            {/* Action bar */}
+            <div className="flex items-center gap-1.5 mt-2.5">
+              {/* Chat status */}
+              <button onClick={handleChatStatusCycle}
+                className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-full transition-all hover:opacity-80"
+                style={{ background: chatStatusUI.color + '18', border: `1px solid ${chatStatusUI.color}33` }}>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: chatStatusUI.color }} />
+                <span style={{ color: chatStatusUI.color }} className="font-semibold">{chatStatusUI.label}</span>
+              </button>
+
+              {/* Connection */}
+              <div className={`flex items-center gap-1 text-xs px-2 py-1.5 rounded-full
+                ${socket.connected ? 'text-emerald-400' : 'text-red-400'}`}
+                style={{ background: socket.connected ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)' }}>
+                {socket.connected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+              </div>
+
+              {/* Spotify */}
+              <button onClick={() => setShowSpotifyConnect(true)}
+                className="w-7 h-7 rounded-full flex items-center justify-center transition-colors"
+                style={spotifyLinked
+                  ? { background: 'rgba(29,185,84,0.15)', border: '1px solid rgba(29,185,84,0.35)' }
+                  : { background: 'rgba(255,255,255,0.06)' }}
+                title={spotifyLinked ? 'Spotify connecté' : 'Connecter Spotify'}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="12" fill={spotifyLinked ? '#1DB954' : 'rgba(255,255,255,0.25)'}/>
+                  <path d="M17.25 10.63c-3.01-1.78-7.97-1.95-10.84-1.08a.97.97 0 1 0 .56 1.86c2.47-.75 6.58-.6 9.17.91a.97.97 0 0 0 1.11-1.69z" fill="white"/>
+                  <path d="M16.65 13.58a.81.81 0 0 0-1.12-.27c-2.5-1.54-6.3-1.98-9.26-1.08a.81.81 0 0 0 .47 1.55c2.56-.78 5.75-.33 7.91 1.07a.81.81 0 0 0 1-.27z" fill="white"/>
+                  <path d="M15.89 16.49a.65.65 0 0 0-.9-.22 12.3 12.3 0 0 0-7.5-.87.65.65 0 1 0 .29 1.27 11 11 0 0 1 6.69.77.65.65 0 0 0 .92-.95z" fill="white"/>
+                </svg>
+              </button>
+
+              {/* Donate */}
+              <button onClick={() => setShowDonateApp(true)}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-pink-400/50 hover:text-pink-400 hover:bg-pink-400/10 transition-colors"
+                title="Soutenir MeloSong">
+                <Heart className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Logout */}
+              <button onClick={() => { localStorage.removeItem(PROFILE_KEY); logout(); setProfile(null); setSession(null); setJoined(false); }}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-white/20 hover:text-white/50 hover:bg-white/10 transition-colors text-sm"
+                title="Se déconnecter">
+                ↩
+              </button>
+            </div>
           </div>
-
-          {/* Edit profile */}
-          <button onClick={() => setShowProfileEditor(true)} title="Modifier mon profil"
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-white/30
-              hover:text-white/60 hover:bg-white/10 transition-colors">
-            <UserCircle2 className="w-4 h-4" />
-          </button>
-
-          {/* Spotify link */}
-          <button onClick={() => setShowSpotifyConnect(true)}
-            className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-            style={spotifyLinked
-              ? { background: 'rgba(29,185,84,0.15)', border: '1px solid rgba(29,185,84,0.3)' }
-              : { background: 'rgba(255,255,255,0.05)' }
-            }
-            title={spotifyLinked ? 'Spotify connecté' : 'Connecter Spotify'}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="12" fill={spotifyLinked ? '#1DB954' : 'rgba(255,255,255,0.2)'}/>
-              <path d="M17.25 10.63c-3.01-1.78-7.97-1.95-10.84-1.08a.97.97 0 1 0 .56 1.86c2.47-.75 6.58-.6 9.17.91a.97.97 0 0 0 1.11-1.69z" fill="white"/>
-              <path d="M16.65 13.58a.81.81 0 0 0-1.12-.27c-2.5-1.54-6.3-1.98-9.26-1.08a.81.81 0 0 0 .47 1.55c2.56-.78 5.75-.33 7.91 1.07a.81.81 0 0 0 1-.27z" fill="white"/>
-              <path d="M15.89 16.49a.65.65 0 0 0-.9-.22 12.3 12.3 0 0 0-7.5-.87.65.65 0 1 0 .29 1.27 11 11 0 0 1 6.69.77.65.65 0 0 0 .92-.95z" fill="white"/>
-            </svg>
-          </button>
-
-          {/* Donate app */}
-          <button onClick={() => setShowDonateApp(true)}
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-pink-400/50
-              hover:text-pink-400 hover:bg-pink-400/10 transition-colors" title="Soutenir MeloSong">
-            <Heart className="w-4 h-4" />
-          </button>
-
-          {/* Reset */}
-          <button onClick={() => { localStorage.removeItem(PROFILE_KEY); logout(); setProfile(null); setSession(null); setJoined(false); }}
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-white/20
-              hover:text-white/50 hover:bg-white/10 transition-colors text-sm" title="Se déconnecter">
-            ↩
-          </button>
-          </div>{/* end user row */}
         </header>
 
         {/* Now playing */}
