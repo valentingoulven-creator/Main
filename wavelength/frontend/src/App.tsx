@@ -12,6 +12,7 @@ import ProfileModal from './components/ProfileModal';
 import ProfileEditor from './components/ProfileEditor';
 import { useGeolocation } from './hooks/useGeolocation';
 import GpsPicker from './components/GpsPicker';
+import AdBanner from './components/AdBanner';
 import { useSocket } from './hooks/useSocket';
 import type { UserProfile, Track, Coordinates, ChatStatus, ChatConversation, IncomingChatRequest, NearbyUser, ChatPeer } from './types';
 
@@ -330,7 +331,12 @@ export default function App() {
       </aside>
 
       {/* ── Right panel: full map ─────────────────────────── */}
-      <main className="flex-1 relative overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Ad banner */}
+        <AdBanner />
+
+        {/* Map or empty state */}
+        <div className="flex-1 relative overflow-hidden">
         {geo.position ? (
           <MapView myPosition={geo.position} profile={profile} nearbyUsers={socket.nearbyUsers} focusPosition={focusPosition} />
         ) : (
@@ -375,6 +381,7 @@ export default function App() {
             <div className="text-2xl font-bold gradient-text">{socket.nearbyUsers.length}</div>
           </div>
         )}
+        </div>{/* end map wrapper */}
       </main>
 
       {/* ── Modals & overlays ─────────────────────────────── */}
