@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Wifi, WifiOff, Navigation, AlertCircle, Loader2, UserCircle2, MapPin, Heart } from 'lucide-react';
-import { YouTubeLogo } from './components/SourceLogo';
 import { MeloSongLockup, MeloSongMark } from './components/MeloSongLogo';
 import SetupScreen from './components/SetupScreen';
 import AuthScreen from './components/AuthScreen';
@@ -33,6 +32,9 @@ import YouTubeConnect from './components/YouTubeConnect';
 import EmailVerifyBanner, { VerifiedBadge } from './components/EmailVerifyBanner';
 import SettingsPanel from './components/SettingsPanel';
 import { loadBlocked, unblockUser as unblockUserStorage, getReferralCode, clearAllData } from './utils/profileStorage';
+import { loadFavorites, removeFavorite as removeFav } from './utils/favorites';
+import type { FavoriteUser } from './utils/favorites';
+import FavoritesList from './components/FavoritesList';
 import type { BlockedUser } from './utils/profileStorage';
 import { handleYtCallback, isYtConnected as ytConnected } from './utils/youtubeAuth';
 import type { PublicLive } from './types';
@@ -63,6 +65,7 @@ export default function App() {
   const [emailVerified, setEmailVerified] = useState(() => loadSession()?.emailVerified ?? false);
   const [showSettings, setShowSettings]   = useState(false);
   const [blockedUsers, setBlockedUsers]   = useState<BlockedUser[]>(loadBlocked);
+  const [favorites, setFavorites]         = useState<FavoriteUser[]>(loadFavorites);
   const [profile, setProfile]       = useState<UserProfile | null>(loadProfile);
   const [myTrack, setMyTrack]       = useState<Track | null>(null);
   const [myJamUrl, setMyJamUrl]     = useState<string>(() => localStorage.getItem(JAM_KEY) ?? '');
@@ -94,7 +97,7 @@ export default function App() {
   const [watchingLive, setWatchingLive]           = useState<NearbyUser | PublicLive | null>(null);
   const [amLive, setAmLive]                       = useState(false);
   const [liveViewers, setLiveViewers]             = useState(0);
-  const [view, setView]                           = useState<'nearby' | 'discover'>('nearby');
+  const [view, setView]                           = useState<'nearby' | 'discover' | 'favorites'>('nearby');
   const [ratingsCache, setRatingsCache]           = useState<Record<string, Rating[]>>({});
   const [myRatings, setMyRatings]                 = useState<Record<string, string>>({}); // targetId → vibe
   const [focusPosition, setFocusPosition]   = useState<Coordinates | null>(null);
@@ -421,6 +424,43 @@ export default function App() {
               <div className="text-xs text-white/25 mt-0.5">membre MeloSong</div>
             )}
 
+            {/* Spotify + YouTube logos sous la description */}
+            <div className="flex items-center gap-2 mt-2">
+              <button onClick={() => setShowSpotifyConnect(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all hover:opacity-80 active:scale-95"
+                style={spotifyLinked
+                  ? { background: 'rgba(29,185,84,0.18)', border: '1px solid rgba(29,185,84,0.4)' }
+                  : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                title={spotifyLinked ? 'Spotify connecté' : 'Connecter Spotify'}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="12" fill={spotifyLinked ? '#1DB954' : 'rgba(255,255,255,0.3)'}/>
+                  <path d="M17.25 10.63c-3.01-1.78-7.97-1.95-10.84-1.08a.97.97 0 1 0 .56 1.86c2.47-.75 6.58-.6 9.17.91a.97.97 0 0 0 1.11-1.69z" fill="white"/>
+                  <path d="M16.65 13.58a.81.81 0 0 0-1.12-.27c-2.5-1.54-6.3-1.98-9.26-1.08a.81.81 0 0 0 .47 1.55c2.56-.78 5.75-.33 7.91 1.07a.81.81 0 0 0 1-.27z" fill="white"/>
+                  <path d="M15.89 16.49a.65.65 0 0 0-.9-.22 12.3 12.3 0 0 0-7.5-.87.65.65 0 1 0 .29 1.27 11 11 0 0 1 6.69.77.65.65 0 0 0 .92-.95z" fill="white"/>
+                </svg>
+                <span className="text-xs font-semibold" style={{ color: spotifyLinked ? '#1DB954' : 'rgba(255,255,255,0.45)' }}>
+                  Spotify
+                </span>
+                {spotifyLinked && <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse flex-shrink-0" />}
+              </button>
+
+              <button onClick={() => setShowYouTubeConnect(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all hover:opacity-80 active:scale-95"
+                style={youtubeLinked
+                  ? { background: 'rgba(255,0,0,0.18)', border: '1px solid rgba(255,0,0,0.4)' }
+                  : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                title={youtubeLinked ? 'YouTube connecté' : 'Connecter YouTube'}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <rect width="24" height="24" rx="5" fill={youtubeLinked ? '#FF0000' : 'rgba(255,255,255,0.3)'}/>
+                  <path d="M9.85 15.02V8.98L15.52 12l-5.67 3.02z" fill="white"/>
+                </svg>
+                <span className="text-xs font-semibold" style={{ color: youtubeLinked ? '#ff4444' : 'rgba(255,255,255,0.45)' }}>
+                  YouTube
+                </span>
+                {youtubeLinked && <span className="w-1.5 h-1.5 bg-red-500 rounded-full flex-shrink-0" />}
+              </button>
+            </div>
+
             {/* Action bar */}
             <div className="flex items-center gap-1.5 mt-2.5">
               {/* Chat status */}
@@ -439,23 +479,6 @@ export default function App() {
               </div>
 
               {/* Spotify */}
-              <button onClick={() => setShowSpotifyConnect(true)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all hover:opacity-80"
-                style={spotifyLinked
-                  ? { background: 'rgba(29,185,84,0.15)', border: '1px solid rgba(29,185,84,0.35)' }
-                  : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}
-                title={spotifyLinked ? 'Spotify connecté' : 'Connecter Spotify'}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="12" fill={spotifyLinked ? '#1DB954' : 'rgba(255,255,255,0.3)'}/>
-                  <path d="M17.25 10.63c-3.01-1.78-7.97-1.95-10.84-1.08a.97.97 0 1 0 .56 1.86c2.47-.75 6.58-.6 9.17.91a.97.97 0 0 0 1.11-1.69z" fill="white"/>
-                  <path d="M16.65 13.58a.81.81 0 0 0-1.12-.27c-2.5-1.54-6.3-1.98-9.26-1.08a.81.81 0 0 0 .47 1.55c2.56-.78 5.75-.33 7.91 1.07a.81.81 0 0 0 1-.27z" fill="white"/>
-                  <path d="M15.89 16.49a.65.65 0 0 0-.9-.22 12.3 12.3 0 0 0-7.5-.87.65.65 0 1 0 .29 1.27 11 11 0 0 1 6.69.77.65.65 0 0 0 .92-.95z" fill="white"/>
-                </svg>
-                <span className="text-xs font-semibold"
-                  style={{ color: spotifyLinked ? '#1DB954' : 'rgba(255,255,255,0.4)' }}>
-                  {spotifyLinked ? 'Spotify' : '+ Spotify'}
-                </span>
-              </button>
 
             </div>
           </div>
@@ -473,73 +496,9 @@ export default function App() {
         <div className="px-4 py-3 flex-shrink-0">
           <div className="text-xs font-semibold text-white/30 uppercase tracking-wider mb-2">J'écoute en ce moment</div>
 
-          {/* Platform connections */}
-          <div className="flex gap-2 mb-2">
-            {/* Spotify */}
-            {!spotifyLinked ? (
-              <button onClick={() => setShowSpotifyConnect(true)}
-                className="flex-1 flex items-center gap-2 p-2.5 rounded-xl transition-all hover:opacity-90 active:scale-[0.99]"
-                style={{ background: 'rgba(29,185,84,0.08)', border: '1.5px dashed rgba(29,185,84,0.3)' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
-                  <circle cx="12" cy="12" r="12" fill="#1DB954"/>
-                  <path d="M17.25 10.63c-3.01-1.78-7.97-1.95-10.84-1.08a.97.97 0 1 0 .56 1.86c2.47-.75 6.58-.6 9.17.91a.97.97 0 0 0 1.11-1.69z" fill="white"/>
-                  <path d="M16.65 13.58a.81.81 0 0 0-1.12-.27c-2.5-1.54-6.3-1.98-9.26-1.08a.81.81 0 0 0 .47 1.55c2.56-.78 5.75-.33 7.91 1.07a.81.81 0 0 0 1-.27z" fill="white"/>
-                  <path d="M15.89 16.49a.65.65 0 0 0-.9-.22 12.3 12.3 0 0 0-7.5-.87.65.65 0 1 0 .29 1.27 11 11 0 0 1 6.69.77.65.65 0 0 0 .92-.95z" fill="white"/>
-                </svg>
-                <div className="text-left min-w-0">
-                  <div className="text-xs font-bold truncate" style={{ color: '#1DB954' }}>+ Spotify</div>
-                  <div className="text-xs text-white/30 leading-tight">Partage auto</div>
-                </div>
-              </button>
-            ) : (
-              <button onClick={() => setShowSpotifyConnect(true)}
-                className="flex-1 flex items-center gap-2 px-2.5 py-2 rounded-xl transition-all hover:opacity-80"
-                style={{ background: 'rgba(29,185,84,0.07)', border: '1px solid rgba(29,185,84,0.25)' }}>
-                <span className="w-2 h-2 rounded-full flex-shrink-0 bg-green-400 animate-pulse" />
-                <span className="text-xs font-semibold truncate" style={{ color: '#1DB954' }}>
-                  {myTrack?.title ?? 'Spotify ✓'}
-                </span>
-              </button>
-            )}
-
-            {/* YouTube */}
-            {!youtubeLinked ? (
-              <button onClick={() => setShowYouTubeConnect(true)}
-                className="flex-1 flex items-center gap-2 p-2.5 rounded-xl transition-all hover:opacity-90 active:scale-[0.99]"
-                style={{ background: 'rgba(255,0,0,0.07)', border: '1.5px dashed rgba(255,0,0,0.3)' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
-                  <rect width="24" height="24" rx="5" fill="#FF0000"/>
-                  <path d="M9.85 15.02V8.98L15.52 12l-5.67 3.02z" fill="white"/>
-                </svg>
-                <div className="text-left min-w-0">
-                  <div className="text-xs font-bold truncate" style={{ color: '#ff4444' }}>+ YouTube</div>
-                  <div className="text-xs text-white/30 leading-tight">Partage vidéos</div>
-                </div>
-              </button>
-            ) : (
-              <button onClick={() => setShowYouTubeConnect(true)}
-                className="flex-1 flex items-center gap-2 px-2.5 py-2 rounded-xl transition-all hover:opacity-80"
-                style={{ background: 'rgba(255,0,0,0.07)', border: '1px solid rgba(255,0,0,0.2)' }}>
-                <span className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0" />
-                <span className="text-xs font-semibold truncate" style={{ color: '#ff4444' }}>YouTube ✓</span>
-              </button>
-            )}
-          </div>
-
           <NowPlaying profile={profile} track={myTrack} jamUrl={myJamUrl}
             onEdit={() => setShowTrackInput(true)}
             onOpenSpotify={() => setShowSpotifyConnect(true)} />
-          {/* YouTube session button */}
-          <button onClick={() => myYTSession ? undefined : setShowYTSetup(true)}
-            className="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold text-white transition-all active:scale-95 hover:opacity-90"
-            style={myYTSession
-              ? { background: 'rgba(255,0,0,0.2)', border: '1px solid rgba(255,0,0,0.4)', color: '#ff4444' }
-              : { background: 'rgba(255,0,0,0.08)', border: '1px solid rgba(255,0,0,0.18)', color: 'rgba(255,255,255,0.5)' }
-            }>
-            <YouTubeLogo size={14} className="flex-shrink-0" />
-            {myYTSession ? `Session YouTube — ${myYTSession.participants} auditeur${myYTSession.participants > 1 ? 's' : ''}` : 'Session d\'écoute YouTube'}
-          </button>
-
           {/* Go Live button */}
           <button onClick={() => amLive ? setShowLiveBroadcast(true) : setShowLiveSetup(true)}
             className="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold text-white transition-all active:scale-95 hover:opacity-90"
@@ -585,17 +544,18 @@ export default function App() {
           </div>
         )}
 
-        {/* Tabs: Proximité / Découvrir */}
+        {/* Tabs: Proximité / Favoris / Découvrir */}
         <div className="flex gap-1 px-4 pb-2 flex-shrink-0">
           {([
-            ['nearby',   '🎵', 'Proximité'],
-            ['discover', '🔴', 'Découvrir'],
+            ['nearby',    '🎵', 'Proximité'],
+            ['favorites', '⭐', 'Favoris'],
+            ['discover',  '🔴', 'Découvrir'],
           ] as const).map(([id, icon, label]) => (
-            <button key={id} onClick={() => setView(id)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200"
+            <button key={id} onClick={() => setView(id as 'nearby' | 'discover')}
+              className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-semibold transition-all duration-200"
               style={view === id
-                ? { background: id === 'discover' ? 'rgba(239,68,68,0.2)' : profile.color + '22',
-                    color: id === 'discover' ? '#ef4444' : profile.color }
+                ? { background: id === 'discover' ? 'rgba(239,68,68,0.2)' : id === 'favorites' ? 'rgba(251,191,36,0.2)' : profile.color + '22',
+                    color: id === 'discover' ? '#ef4444' : id === 'favorites' ? '#fbbf24' : profile.color }
                 : { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.35)' }}>
               {icon} {label}
               {id === 'discover' && socket.publicLives.length > 0 && (
@@ -620,6 +580,15 @@ export default function App() {
               onWatchLive={(user) => setWatchingLive(user)}
               onJoinYT={handleJoinYTSession}
               myChatStatus={chatStatus}
+              accentColor={profile.color}
+            />
+          ) : view === 'favorites' ? (
+            <FavoritesList
+            key={Date.now() % 10000 /* re-render when tab becomes active */}
+              favorites={favorites}
+              nearbyUsers={socket.nearbyUsers}
+              onChat={(f) => handleStartChat(f as unknown as NearbyUser)}
+              onRemove={(id) => { removeFav(id); setFavorites(loadFavorites()); }}
               accentColor={profile.color}
             />
           ) : (

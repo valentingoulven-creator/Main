@@ -1,6 +1,8 @@
-import { MessageCircle, ExternalLink, Users, Radio } from 'lucide-react';
+import { useState } from 'react';
+import { MessageCircle, ExternalLink, Users, Radio, Star } from 'lucide-react';
 import type { NearbyUser } from '../types';
 import { SpotifyLogo, YouTubeLogo, ManualMusicLogo } from './SourceLogo';
+import { isFavorite, addFavorite, removeFavorite } from '../utils/favorites';
 
 interface Props {
   user: NearbyUser;
@@ -24,6 +26,13 @@ export default function NearbyCard({ user, onClick, onChat, onWatchLive, onJoinY
   const { track } = user;
   const canChat = user.chatStatus !== 'dnd';
   const statusDot = STATUS_DOT[user.chatStatus ?? 'available'];
+  const [fav, setFav] = useState(isFavorite(user.id));
+
+  function toggleFav(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (fav) { removeFavorite(user.id); setFav(false); }
+    else { addFavorite({ id: user.id, username: user.username, color: user.color, emoji: user.emoji, photo: user.photos?.[0], bio: user.bio, savedAt: Date.now() }); setFav(true); }
+  }
 
   return (
     <div
@@ -123,8 +132,16 @@ export default function NearbyCard({ user, onClick, onChat, onWatchLive, onJoinY
           </a>
         )}
 
+        {/* Favorite button */}
+        <button onClick={toggleFav}
+          className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90"
+          style={fav ? { background: 'rgba(251,191,36,0.2)' } : { background: 'rgba(255,255,255,0.06)' }}
+          title={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'}>
+          <Star className="w-4 h-4" style={{ color: fav ? '#fbbf24' : 'rgba(255,255,255,0.3)', fill: fav ? '#fbbf24' : 'none' }} />
+        </button>
+
         {/* Chat button */}
-          <button
+        <button
           onClick={e => { e.stopPropagation(); if (canChat) onChat(); }}
           disabled={!canChat}
           title={canChat ? 'Discuter' : 'Ne pas déranger'}

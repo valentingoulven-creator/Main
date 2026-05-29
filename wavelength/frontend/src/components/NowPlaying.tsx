@@ -91,28 +91,32 @@ export default function NowPlaying({ profile, track, jamUrl, onEdit, onOpenSpoti
         </div>
       </div>
 
-      {/* ── JAM active banner ── */}
+      {/* ── JAM active banner — ouvre directement dans Spotify ── */}
       {hasJam && (
-        <div className="flex items-center"
-          style={{ background: 'linear-gradient(90deg, rgba(29,185,84,0.2), rgba(29,185,84,0.08))', borderTop: '1px solid rgba(29,185,84,0.25)' }}>
-          {/* Join link */}
-          <a href={jamUrl} target="_blank" rel="noopener noreferrer"
-            className="flex-1 flex items-center gap-2 px-3 py-2.5 transition-all hover:opacity-90">
-            <SpotifyLogo size={14} className="flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-black truncate" style={{ color: '#1DB954' }}>
-                🎉 Jam actif — {track ? `${track.title}` : 'Rejoins l\'écoute !'}
-              </div>
-              <div className="text-xs text-white/35 truncate">Appuie pour rejoindre le Jam</div>
+        <div style={{ background: 'linear-gradient(90deg, rgba(29,185,84,0.22), rgba(29,185,84,0.1))', borderTop: '1px solid rgba(29,185,84,0.28)' }}>
+          {/* Open in Spotify — primary CTA */}
+          <a
+            href={jamUrl!.startsWith('spotify:') ? jamUrl! : `spotify:${jamUrl!.replace('https://open.spotify.com/', '').replace(/\//g, ':')}`}
+            onClick={() => { setTimeout(() => { window.open(jamUrl, '_blank'); }, 500); }}
+            className="flex items-center gap-2.5 px-3 pt-2.5 pb-1 transition-all hover:opacity-90 active:scale-[0.99] w-full"
+          >
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md"
+              style={{ background: '#1DB954' }}>
+              <SpotifyLogo size={18} />
             </div>
-            <ExternalLink className="w-3.5 h-3.5 opacity-50 flex-shrink-0" style={{ color: '#1DB954' }} />
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-black" style={{ color: '#1DB954' }}>
+                {track ? `🎉 ${track.title}` : '🎉 Jam actif — Rejoins l\'écoute !'}
+              </div>
+              <div className="text-xs text-white/40">Ouvrir dans Spotify →</div>
+            </div>
+            <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#1DB954', opacity: 0.6 }} />
           </a>
-          {/* Invite button */}
-          <button onClick={() => { navigator.clipboard.writeText(jamUrl); }}
-            className="flex-shrink-0 flex items-center gap-1 px-3 py-2.5 text-xs font-bold transition-all hover:opacity-90 border-l"
-            style={{ color: '#1DB954', borderColor: 'rgba(29,185,84,0.2)' }}>
-            <Users className="w-3.5 h-3.5" />
-            Inviter
+          {/* Invite copy */}
+          <button onClick={() => navigator.clipboard.writeText(jamUrl!)}
+            className="flex items-center justify-center gap-1.5 w-full py-2 text-xs font-semibold transition-all hover:opacity-80"
+            style={{ color: 'rgba(29,185,84,0.7)', borderTop: '1px solid rgba(29,185,84,0.1)' }}>
+            <Users className="w-3 h-3" /> Copier le lien d'invitation
           </button>
         </div>
       )}
