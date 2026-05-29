@@ -369,11 +369,6 @@ export default function App() {
           </div>
         )}
 
-        {/* MeloSong watermark on map */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[500] pointer-events-none select-none opacity-50">
-          <MeloSongLockup markSize={16} textSize="text-sm" />
-        </div>
-
         {/* Listener count */}
         {geo.position && socket.nearbyUsers.length > 0 && (
           <div className="absolute top-4 right-4 z-[500] glass rounded-2xl px-4 py-2.5 animate-fade-in">
