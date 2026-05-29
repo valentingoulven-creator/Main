@@ -29,8 +29,6 @@ import SpotifyConnect from './components/SpotifyConnect';
 import YouTubeConnect from './components/YouTubeConnect';
 import EmailVerifyBanner, { VerifiedBadge } from './components/EmailVerifyBanner';
 import { handleYtCallback, isYtConnected as ytConnected } from './utils/youtubeAuth';
-import { useSpotifyNowPlaying } from './hooks/useSpotifyNowPlaying';
-import { handleCallback, isConnected as spotifyConnected } from './utils/spotifyAuth';
 import type { PublicLive } from './types';
 import { useSocket } from './hooks/useSocket';
 import type { UserProfile, Track, Coordinates, ChatStatus, ChatConversation, IncomingChatRequest, NearbyUser, ChatPeer, Rating } from './types';
@@ -73,7 +71,7 @@ export default function App() {
   const [donateTarget, setDonateTarget]           = useState<NearbyUser | null>(null);
   const [showDonateApp, setShowDonateApp]         = useState(false);
   const [showSpotifyConnect, setShowSpotifyConnect] = useState(false);
-  const [spotifyLinked, setSpotifyLinked]           = useState(spotifyConnected);
+  const spotifyLinked = myTrack?.source === 'spotify';
   const [showYouTubeConnect, setShowYouTubeConnect] = useState(false);
   const [youtubeLinked, setYoutubeLinked]           = useState(ytConnected);
   const [showLiveSetup, setShowLiveSetup]         = useState(false);
@@ -97,28 +95,15 @@ export default function App() {
   const geo    = useGeolocation();
   const socket = useSocket();
 
-  // ── Spotify OAuth callback ──────────────────────────────────────────────────
+  // ── YouTube OAuth callback ──────────────────────────────────────────────────
   useEffect(() => {
     const path = window.location.pathname;
     const code = new URLSearchParams(window.location.search).get('code');
-
-    if (path === '/spotify/callback') {
-      if (code) handleCallback(code).then(ok => { setSpotifyLinked(ok); });
-      window.history.replaceState({}, '', '/');
-    } else if (path === '/youtube/callback') {
+    if (path === '/youtube/callback') {
       if (code) handleYtCallback(code).then(ok => { setYoutubeLinked(ok); });
       window.history.replaceState({}, '', '/');
     }
   }, []);
-
-  // ── Spotify Now Playing ─────────────────────────────────────────────────────
-  const { track: spotifyTrack, loading: spotifyLoading, refresh: spotifyRefresh } =
-    useSpotifyNowPlaying(spotifyLinked, (track) => {
-      if (!track) return;
-      const t = { title: track.title, artist: track.artist, albumArt: track.albumArt, source: 'spotify' as const, url: track.url };
-      setMyTrack(t);
-      if (joined) socket.updateTrack(t);
-    });
 
   // Register live callbacks
   useEffect(() => {
@@ -449,9 +434,9 @@ export default function App() {
               <button onClick={() => setShowSpotifyConnect(true)}
                 className="flex-1 flex items-center gap-2 px-2.5 py-2 rounded-xl transition-all hover:opacity-80"
                 style={{ background: 'rgba(29,185,84,0.07)', border: '1px solid rgba(29,185,84,0.25)' }}>
-                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${spotifyTrack?.isPlaying ? 'bg-green-400 animate-pulse' : 'bg-green-700'}`} />
+                <span className="w-2 h-2 rounded-full flex-shrink-0 bg-green-400 animate-pulse" />
                 <span className="text-xs font-semibold truncate" style={{ color: '#1DB954' }}>
-                  {spotifyTrack?.isPlaying ? spotifyTrack.title : 'Spotify ✓'}
+                  {myTrack?.title ?? 'Spotify ✓'}
                 </span>
               </button>
             )}
@@ -732,10 +717,9 @@ export default function App() {
       {/* Spotify connect */}
       {showSpotifyConnect && (
         <SpotifyConnect
-          currentTrack={spotifyTrack}
-          isPolling={spotifyLoading}
-          onClose={() => { setShowSpotifyConnect(false); setSpotifyLinked(spotifyConnected()); }}
-          onRefresh={spotifyRefresh}
+          currentTrack={myTrack}
+          onShare={(track) => handleTrackSave(track)}
+          onClose={() => setShowSpotifyConnect(false)}
         />
       )}
 
