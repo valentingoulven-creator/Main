@@ -15,6 +15,10 @@ export interface UserProfile {
   username: string;
   color: string;
   emoji: string;
+  bio?: string;
+  interests?: string[];
+  photos?: string[]; // base64 data URLs or https:// URLs, max 3
+  jamUrl?: string;
 }
 
 export type ChatStatus = 'available' | 'busy' | 'dnd';
@@ -28,6 +32,10 @@ export interface NearbyUser {
   track: Track | null;
   distance: number;
   chatStatus?: ChatStatus;
+  bio?: string;
+  interests?: string[];
+  photos?: string[];
+  jamUrl?: string;
   isMock?: boolean;
 }
 

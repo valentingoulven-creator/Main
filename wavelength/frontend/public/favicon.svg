@@ -1,10 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="8" fill="#0d0d1a"/>
-  <g stroke="none">
-    <rect x="4" y="14" width="3" height="4" rx="1.5" fill="#8b5cf6"/>
-    <rect x="9" y="10" width="3" height="12" rx="1.5" fill="#a78bfa"/>
-    <rect x="14" y="7" width="3" height="18" rx="1.5" fill="#c4b5fd"/>
-    <rect x="19" y="10" width="3" height="12" rx="1.5" fill="#a78bfa"/>
-    <rect x="24" y="13" width="3" height="6" rx="1.5" fill="#8b5cf6"/>
-  </g>
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="9" fill="url(#g)"/>
+  <!-- M letter with note -->
+  <text x="5" y="23" font-family="Georgia,serif" font-size="19" font-weight="bold" fill="white">M</text>
+  <circle cx="26" cy="10" r="3" fill="white" opacity="0.9"/>
+  <rect x="28.5" y="4" width="1.5" height="7" rx="0.75" fill="white" opacity="0.9"/>
 </svg>

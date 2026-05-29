@@ -7,7 +7,6 @@ const RADIUS_OPTIONS = [
   { label: '1 km',  value: 1000 },
   { label: '2 km',  value: 2000 },
   { label: '5 km',  value: 5000 },
-  { label: '10 km', value: 10000 },
 ];
 
 interface Props {
@@ -16,11 +15,12 @@ interface Props {
   onRadiusChange: (r: number) => void;
   onSelectUser: (pos: Coordinates) => void;
   onChatUser: (user: NearbyUser) => void;
+  onViewProfile: (user: NearbyUser) => void;
   myChatStatus: ChatStatus;
   accentColor: string;
 }
 
-export default function NearbyList({ users, radius, onRadiusChange, onSelectUser, onChatUser, myChatStatus, accentColor }: Props) {
+export default function NearbyList({ users, radius, onRadiusChange, onSelectUser, onChatUser, onViewProfile, accentColor }: Props) {
   const playing = users.filter(u => u.track);
   const idle = users.filter(u => !u.track);
 
@@ -63,13 +63,17 @@ export default function NearbyList({ users, radius, onRadiusChange, onSelectUser
         ) : (
           <>
             {playing.map(u => (
-              <NearbyCard key={u.id} user={u} onClick={() => onSelectUser(u.position)} onChat={() => onChatUser(u)} myChatStatus={myChatStatus} />
+              <NearbyCard key={u.id} user={u}
+                onClick={() => { onViewProfile(u); onSelectUser(u.position); }}
+                onChat={() => onChatUser(u)} />
             ))}
             {idle.length > 0 && playing.length > 0 && (
               <div className="text-xs text-white/20 px-1 pt-1">Pas en écoute</div>
             )}
             {idle.map(u => (
-              <NearbyCard key={u.id} user={u} onClick={() => onSelectUser(u.position)} onChat={() => onChatUser(u)} myChatStatus={myChatStatus} />
+              <NearbyCard key={u.id} user={u}
+                onClick={() => { onViewProfile(u); onSelectUser(u.position); }}
+                onChat={() => onChatUser(u)} />
             ))}
           </>
         )}
