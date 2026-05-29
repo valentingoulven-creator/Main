@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { X, Users, Volume2, VolumeX, Heart } from 'lucide-react';
+import { X, Users, Volume2, VolumeX, Heart, MessageSquare } from 'lucide-react';
 import type { NearbyUser, UserProfile } from '../types';
 import { DonateUser } from './DonateModal';
 import LiveChat from './LiveChat';
@@ -16,6 +16,7 @@ interface Props {
   myId: string;
   profile: UserProfile;
   onClose: () => void;
+  onSendDM?: (broadcaster: NearbyUser) => void;
   onJoinLive:      (broadcasterId: string) => void;
   onLeaveLive:     (broadcasterId: string) => void;
   onSendAnswer:    (broadcasterId: string, answer: RTCSessionDescriptionInit) => void;
@@ -26,7 +27,7 @@ interface Props {
 }
 
 export default function LiveViewer({
-  broadcaster, profile, onClose,
+  broadcaster, profile, onClose, onSendDM,
   onJoinLive, onLeaveLive,
   onSendAnswer, onSendIce,
   onOfferReceived, onIceReceived, onLiveEnded,
@@ -115,11 +116,20 @@ export default function LiveViewer({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {/* Private message */}
+          {onSendDM && (
+            <button onClick={() => { onSendDM(broadcaster); onClose(); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white transition-all active:scale-95 hover:opacity-90"
+              style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)' }}>
+              <MessageSquare className="w-3.5 h-3.5" /> Message privé
+            </button>
+          )}
+
           {/* Donate during live */}
           <button onClick={() => setShowDonate(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white transition-all active:scale-95 hover:opacity-90"
             style={{ background: 'linear-gradient(135deg, #ec4899, #8b5cf6)' }}>
-            <Heart className="w-3.5 h-3.5" /> Donner
+            <Heart className="w-3.5 h-3.5" /> Don
           </button>
           <button onClick={() => setMuted(m => !m)}
             className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors">

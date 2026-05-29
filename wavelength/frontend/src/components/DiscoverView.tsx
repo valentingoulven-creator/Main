@@ -20,9 +20,10 @@ interface Props {
   onRefresh: () => void;
   accentColor: string;
   profile: UserProfile;
+  onSendDM?: (live: PublicLive) => void;
 }
 
-export default function DiscoverView({ lives, onWatch, onRefresh, accentColor, profile }: Props) {
+export default function DiscoverView({ lives, onWatch, onRefresh, accentColor, profile, onSendDM }: Props) {
   const [mode, setMode] = useState<ViewMode>('feed');
 
   useEffect(() => { onRefresh(); }, []);
@@ -75,7 +76,7 @@ export default function DiscoverView({ lives, onWatch, onRefresh, accentColor, p
         {mode === 'feed' ? (
           <LiveFeed lives={lives} onWatch={onWatch} onRefresh={onRefresh} accentColor={accentColor} profile={profile} />
         ) : (
-          <ListView lives={lives} onWatch={onWatch} accentColor={accentColor} profile={profile} />
+          <ListView lives={lives} onWatch={onWatch} accentColor={accentColor} profile={profile} onSendDM={onSendDM} />
         )}
       </div>
     </div>
@@ -84,7 +85,7 @@ export default function DiscoverView({ lives, onWatch, onRefresh, accentColor, p
 
 // ─── List view ────────────────────────────────────────────────────────────────
 
-function ListView({ lives, onWatch, profile }: { lives: PublicLive[]; onWatch: (l: PublicLive) => void; accentColor?: string; profile: UserProfile }) {
+function ListView({ lives, onWatch, profile, onSendDM }: { lives: PublicLive[]; onWatch: (l: PublicLive) => void; accentColor?: string; profile: UserProfile; onSendDM?: (l: PublicLive) => void }) {
   const [chatLive, setChatLive] = useState<PublicLive | null>(null);
 
   if (lives.length === 0) return (
@@ -99,7 +100,7 @@ function ListView({ lives, onWatch, profile }: { lives: PublicLive[]; onWatch: (
     <div className="h-full overflow-y-auto">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3">
         {lives.map(live => (
-          <LiveListCard key={live.id} live={live} onWatch={() => onWatch(live)} onChat={() => setChatLive(live)} />
+          <LiveListCard key={live.id} live={live} onWatch={() => onWatch(live)} onChat={() => setChatLive(live)} onDM={onSendDM ? () => onSendDM(live) : undefined} />
         ))}
       </div>
 
@@ -116,7 +117,7 @@ function ListView({ lives, onWatch, profile }: { lives: PublicLive[]; onWatch: (
   );
 }
 
-function LiveListCard({ live, onWatch, onChat }: { live: PublicLive; onWatch: () => void; onChat: () => void }) {
+function LiveListCard({ live, onWatch, onChat, onDM }: { live: PublicLive; onWatch: () => void; onChat: () => void; onDM?: () => void }) {
   return (
     <div className="rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.99] flex flex-col"
       style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(239,68,68,0.2)' }}>
@@ -183,6 +184,14 @@ function LiveListCard({ live, onWatch, onChat }: { live: PublicLive; onWatch: ()
           style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)' }}>
           <Radio className="w-3.5 h-3.5" /> Rejoindre
         </button>
+        {onDM && (
+          <button onClick={onDM}
+            className="flex items-center justify-center gap-1 px-2.5 py-2 rounded-xl text-xs font-bold transition-all active:scale-95"
+            style={{ background: 'rgba(139,92,246,0.15)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.25)' }}
+            title="Message privé">
+            ✉️
+          </button>
+        )}
         <button onClick={onChat}
           className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all active:scale-95"
           style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>

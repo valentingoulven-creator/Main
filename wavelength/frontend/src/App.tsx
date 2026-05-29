@@ -603,6 +603,7 @@ export default function App() {
               onRefresh={socket.getPublicLivesReq}
               accentColor={profile.color}
               profile={profile}
+              onSendDM={(live) => handleStartChat(live as unknown as NearbyUser)}
             />
           </div>
         ) : (
@@ -822,6 +823,7 @@ export default function App() {
           myId=""
           profile={profile}
           onClose={() => setWatchingLive(null)}
+          onSendDM={(user) => handleStartChat(user)}
           onJoinLive={socket.joinLive}
           onLeaveLive={socket.leaveLive}
           onSendAnswer={socket.sendAnswer}
