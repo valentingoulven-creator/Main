@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { X, Users, Volume2, VolumeX } from 'lucide-react';
+import { X, Users, Volume2, VolumeX, Heart } from 'lucide-react';
 import type { NearbyUser } from '../types';
+import { DonateUser } from './DonateModal';
 
 const STUN_SERVERS = {
   iceServers: [
@@ -30,8 +31,9 @@ export default function LiveViewer({
 }: Props) {
   const videoRef  = useRef<HTMLVideoElement>(null);
   const pcRef     = useRef<RTCPeerConnection | null>(null);
-  const [status, setStatus] = useState<'connecting' | 'live' | 'ended'>('connecting');
-  const [muted, setMuted]   = useState(false);
+  const [status, setStatus]   = useState<'connecting' | 'live' | 'ended'>('connecting');
+  const [muted, setMuted]     = useState(false);
+  const [showDonate, setShowDonate] = useState(false);
 
   useEffect(() => {
     onJoinLive(broadcaster.id);
@@ -111,6 +113,12 @@ export default function LiveViewer({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {/* Donate during live */}
+          <button onClick={() => setShowDonate(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white transition-all active:scale-95 hover:opacity-90"
+            style={{ background: 'linear-gradient(135deg, #ec4899, #8b5cf6)' }}>
+            <Heart className="w-3.5 h-3.5" /> Donner
+          </button>
           <button onClick={() => setMuted(m => !m)}
             className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors">
             {muted ? <VolumeX className="w-4 h-4 text-white/60" /> : <Volume2 className="w-4 h-4 text-white/60" />}
@@ -155,6 +163,10 @@ export default function LiveViewer({
           </div>
         )}
       </div>
+      {/* Donate modal */}
+      {showDonate && (
+        <DonateUser user={broadcaster as NearbyUser} onClose={() => setShowDonate(false)} />
+      )}
     </div>
   );
 }

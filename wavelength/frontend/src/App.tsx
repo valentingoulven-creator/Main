@@ -25,6 +25,7 @@ import type { LiveVisibility } from './components/LiveSetupModal';
 import LiveViewer from './components/LiveViewer';
 import DiscoverTab from './components/DiscoverTab';
 import SpotifyConnect from './components/SpotifyConnect';
+import EmailVerifyBanner, { VerifiedBadge } from './components/EmailVerifyBanner';
 import { useSpotifyNowPlaying } from './hooks/useSpotifyNowPlaying';
 import { handleCallback, isConnected as spotifyConnected } from './utils/spotifyAuth';
 import type { PublicLive } from './types';
@@ -52,6 +53,7 @@ const CHAT_STATUS_UI: Record<ChatStatus, { label: string; color: string; next: C
 
 export default function App() {
   const [session, setSession]       = useState<Session | null>(loadSession);
+  const [emailVerified, setEmailVerified] = useState(() => loadSession()?.emailVerified ?? false);
   const [profile, setProfile]       = useState<UserProfile | null>(loadProfile);
   const [myTrack, setMyTrack]       = useState<Track | null>(null);
   const [myJamUrl, setMyJamUrl]     = useState<string>(() => localStorage.getItem(JAM_KEY) ?? '');
@@ -62,7 +64,7 @@ export default function App() {
   const [showGpsPicker, setShowGpsPicker]         = useState(false);
   const [ratingTarget, setRatingTarget]           = useState<NearbyUser | null>(null);
   const [mapStyle, setMapStyle] = useState<MapStyleDef>(
-    () => MAP_STYLES_5.find(s => s.id === 'physical') ?? MAP_STYLES_5[0]
+    () => MAP_STYLES_5.find(s => s.id === 'carto-dark') ?? MAP_STYLES_5[0]
   );
   const [showCamera, setShowCamera]               = useState(false);
   const [donateTarget, setDonateTarget]           = useState<NearbyUser | null>(null);
@@ -350,7 +352,10 @@ export default function App() {
             </button>
 
             {/* Nom en dessous */}
-            <div className="text-base font-black text-white leading-tight">{profile.username}</div>
+            <div className="flex items-center gap-1.5">
+              <div className="text-base font-black text-white leading-tight">{profile.username}</div>
+              {emailVerified && <VerifiedBadge size={16} />}
+            </div>
             <div className="text-xs text-white/35 mt-0.5">membre MeloSong</div>
 
             {/* Action bar */}
@@ -401,6 +406,14 @@ export default function App() {
             </div>
           </div>
         </header>
+
+        {/* Email verify banner */}
+        {session && !emailVerified && (
+          <EmailVerifyBanner
+            email={session.email}
+            onVerified={() => setEmailVerified(true)}
+          />
+        )}
 
         {/* Now playing */}
         <div className="px-4 py-3 flex-shrink-0">

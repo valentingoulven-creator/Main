@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, MessageCircle, ExternalLink, Music2, MapPin, Cake, Star, Heart } from 'lucide-react';
+import { X, MessageCircle, ExternalLink, Music2, MapPin, Cake, Star, Heart, BadgeCheck } from 'lucide-react';
 import type { NearbyUser, Rating } from '../types';
 import { calcAge } from '../utils/ageUtils';
 import { SpotifyLogo, YouTubeLogo, PLATFORMS } from './SourceLogo';
@@ -73,7 +73,11 @@ export default function ProfileModal({ user, onClose, onChat, onRate, onTip, can
             <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl flex-shrink-0 shadow-xl ring-2 ring-white/10"
               style={{ background: user.color }}>{user.emoji}</div>
             <div className="flex-1 min-w-0 pb-1">
-              <div className="text-base font-bold text-white truncate">{user.username}</div>
+              <div className="flex items-center gap-1.5">
+                <div className="text-base font-bold text-white truncate">{user.username}</div>
+                {/* Verified badge placeholder — shown for real users (non-mock) */}
+                {!user.isMock && <BadgeCheck className="w-4 h-4 text-blue-400 flex-shrink-0" />}
+              </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs text-white/40">{formatDist(user.distance)}</span>
                 {user.birthDate && (
