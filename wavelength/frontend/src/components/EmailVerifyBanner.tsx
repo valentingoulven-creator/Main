@@ -141,10 +141,10 @@ export default function EmailVerifyBanner({ uid, email, username, onVerified }: 
 
 export function VerifiedBadge({ size = 14 }: { size?: number }) {
   return (
-    <span title="Compte vérifié ⭐" style={{ display: 'inline-flex', alignItems: 'center' }}>
+    <span title="Compte vérifié" style={{ display: 'inline-flex', alignItems: 'center' }}>
       <svg width={size} height={size} viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-          fill="#fbbf24" stroke="#f59e0b" strokeWidth="1" strokeLinejoin="round"/>
+          fill="#3b82f6" stroke="#2563eb" strokeWidth="0.5" strokeLinejoin="round"/>
       </svg>
     </span>
   );
