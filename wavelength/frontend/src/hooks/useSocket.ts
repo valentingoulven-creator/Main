@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
-import type { NearbyUser, Coordinates, Track, UserProfile, ChatStatus, ChatPeer, Rating } from '../types';
+import type { NearbyUser, Coordinates, Track, UserProfile, ChatStatus, ChatPeer, Rating, PublicLive } from '../types';
 
 export interface RatingCallbacks {
   onRatingReceived?: (from: ChatPeer, vibe: string, note?: string) => void;
@@ -30,7 +30,8 @@ export function useSocket() {
   const chatCbRef   = useRef<ChatCallbacks>({});
   const ratingCbRef = useRef<RatingCallbacks>({});
   const liveCbRef   = useRef<LiveCallbacks>({});
-  const [nearbyUsers, setNearbyUsers] = useState<NearbyUser[]>([]);
+  const [nearbyUsers, setNearbyUsers]   = useState<NearbyUser[]>([]);
+  const [publicLives, setPublicLives]   = useState<PublicLive[]>([]);
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export function useSocket() {
     socket.on('connect',      () => setConnected(true));
     socket.on('disconnect',   () => setConnected(false));
     socket.on('nearby_users', (users: NearbyUser[]) => setNearbyUsers(users));
+    socket.on('public_lives', (lives: PublicLive[]) => setPublicLives(lives));
     socket.on('chat_request',     ({ from }: { from: ChatPeer }) => chatCbRef.current.onChatRequest?.(from));
     socket.on('chat_accepted',    ({ from }: { from: ChatPeer }) => chatCbRef.current.onChatAccepted?.(from));
     socket.on('chat_declined',    ({ from, reason }: { from: ChatPeer; reason?: string }) => chatCbRef.current.onChatDeclined?.(from, reason));
@@ -84,7 +86,9 @@ export function useSocket() {
   const getRatings  = useCallback((targetId: string)                              => socketRef.current?.emit('get_ratings', { targetId }), []);
 
   // Live
-  const startLive   = useCallback((title: string)                                  => socketRef.current?.emit('start_live',   { title }), []);
+  const startLive   = useCallback((title: string, isPublic: boolean)               => socketRef.current?.emit('start_live',   { title, isPublic }), []);
+  const updateLive  = useCallback((title: string, isPublic: boolean)               => socketRef.current?.emit('update_live',  { title, isPublic }), []);
+  const getPublicLivesReq = useCallback(()                                         => socketRef.current?.emit('get_public_lives'), []);
   const stopLive    = useCallback(()                                                => socketRef.current?.emit('stop_live'), []);
   const joinLive    = useCallback((broadcasterId: string)                           => socketRef.current?.emit('join_live',    { broadcasterId }), []);
   const leaveLive   = useCallback((broadcasterId: string)                           => socketRef.current?.emit('leave_live',   { broadcasterId }), []);
@@ -93,11 +97,12 @@ export function useSocket() {
   const sendIce     = useCallback((to: string, candidate: RTCIceCandidateInit)     => socketRef.current?.emit('live_ice',     { to, candidate }), []);
 
   return {
-    nearbyUsers, connected,
+    nearbyUsers, publicLives, connected,
     join, updatePosition, updateTrack, updateRadius, updateChatStatus, updateProfile,
     registerChatCallbacks, registerRatingCallbacks, registerLiveCallbacks,
     sendChatRequest, acceptChat, declineChat, sendMessage, closeChat,
     sendRating, getRatings,
-    startLive, stopLive, joinLive, leaveLive, sendOffer, sendAnswer, sendIce,
+    startLive, updateLive, stopLive, joinLive, leaveLive, sendOffer, sendAnswer, sendIce,
+    getPublicLivesReq,
   };
 }

@@ -341,11 +341,12 @@ function getPublicUser(user) {
     track: user.track,
     jamUrl: user.jamUrl ?? null,
     chatStatus: user.chatStatus ?? 'available',
-    isLive:     user.isLive    ?? false,
-    liveTitle:  user.liveTitle ?? null,
-    liveStart:  user.liveStart ?? null,
-    viewers:    user.viewers   ?? 0,
-    isMock:     user.isMock    ?? false,
+    isLive:      user.isLive     ?? false,
+    liveTitle:   user.liveTitle  ?? null,
+    liveStart:   user.liveStart  ?? null,
+    livePublic:  user.livePublic ?? false,
+    viewers:     user.viewers    ?? 0,
+    isMock:      user.isMock     ?? false,
   };
 }
 
@@ -360,6 +361,30 @@ function getNearbyUsers(forId, position, radiusMeters) {
     }))
     .filter(u => u.distance <= maxRadius)
     .sort((a, b) => a.distance - b.distance);
+}
+
+function getPublicLives() {
+  return [...connectedUsers.values()]
+    .filter(u => u.isLive && u.livePublic)
+    .map(u => ({
+      id: u.id,
+      username: u.username,
+      color: u.color,
+      emoji: u.emoji,
+      photos: u.photos ?? [],
+      bio: u.bio ?? '',
+      liveTitle: u.liveTitle,
+      liveStart: u.liveStart,
+      viewers: u.viewers ?? 0,
+      track: u.track,
+      address: u.address ?? '',
+    }))
+    .sort((a, b) => (b.viewers ?? 0) - (a.viewers ?? 0));
+}
+
+function pushPublicLives() {
+  const lives = getPublicLives();
+  io.emit('public_lives', lives);
 }
 
 function pushNearby(socketId) {
@@ -576,31 +601,45 @@ io.on('connection', (socket) => {
     socket.emit('ratings_data', { targetId, ratings: getRatings(targetId) });
   });
 
+  socket.on('get_public_lives', () => {
+    socket.emit('public_lives', getPublicLives());
+  });
+
   // ── Live streaming (WebRTC signaling) ─────────────────────────────────────
 
-  socket.on('start_live', ({ title }) => {
+  socket.on('start_live', ({ title, isPublic }) => {
     const u = connectedUsers.get(socket.id);
     if (!u) return;
-    u.isLive    = true;
-    u.liveTitle = title?.trim() || `Live de ${u.username}`;
-    u.liveStart = Date.now();
-    u.viewers   = 0;
-    pushAll(); // notify nearby users of live status
-    console.log(`🔴 LIVE: ${u.username} — "${u.liveTitle}"`);
+    u.isLive       = true;
+    u.liveTitle    = title?.trim() || `Live de ${u.username}`;
+    u.liveStart    = Date.now();
+    u.livePublic   = isPublic === true;
+    u.viewers      = 0;
+    pushAll();
+    pushPublicLives();
+    console.log(`🔴 LIVE: ${u.username} — "${u.liveTitle}" (${u.livePublic ? 'public' : 'privé'})`);
+  });
+
+  socket.on('update_live', ({ title, isPublic }) => {
+    const u = connectedUsers.get(socket.id);
+    if (!u?.isLive) return;
+    if (title    !== undefined) u.liveTitle  = title?.trim() || u.liveTitle;
+    if (isPublic !== undefined) u.livePublic = isPublic;
+    pushAll();
+    pushPublicLives();
   });
 
   socket.on('stop_live', () => {
     const u = connectedUsers.get(socket.id);
     if (!u) return;
-    u.isLive    = false;
-    u.liveTitle = null;
-    u.liveStart = null;
-    u.viewers   = 0;
+    u.isLive     = false;
+    u.liveTitle  = null;
+    u.liveStart  = null;
+    u.livePublic = false;
+    u.viewers    = 0;
     pushAll();
-    // Notify all viewers that the live ended
-    io.sockets.sockets.forEach((s) => {
-      s.emit('live_ended', { broadcasterId: socket.id });
-    });
+    pushPublicLives();
+    io.sockets.sockets.forEach(s => s.emit('live_ended', { broadcasterId: socket.id }));
   });
 
   // Viewer asks to watch a live

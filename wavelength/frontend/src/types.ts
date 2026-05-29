@@ -48,6 +48,7 @@ export interface NearbyUser {
   isLive?: boolean;
   liveTitle?: string;
   liveStart?: number;
+  livePublic?: boolean;
   viewers?: number;
   isMock?: boolean;
 }
@@ -81,6 +82,22 @@ export interface ChatConversation {
 export interface IncomingChatRequest {
   from: ChatPeer;
   timestamp: number;
+}
+
+// ─── Public lives ─────────────────────────────────────────────────────────────
+
+export interface PublicLive {
+  id: string;
+  username: string;
+  color: string;
+  emoji: string;
+  photos: string[];
+  bio: string;
+  liveTitle: string;
+  liveStart: number;
+  viewers: number;
+  track: Track | null;
+  address: string;
 }
 
 // ─── Ratings ──────────────────────────────────────────────────────────────────

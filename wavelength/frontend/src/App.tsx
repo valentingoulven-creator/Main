@@ -20,6 +20,8 @@ import CameraCapture from './components/CameraCapture';
 import { DonateUser, DonateApp } from './components/DonateModal';
 import LiveBroadcast from './components/LiveBroadcast';
 import LiveViewer from './components/LiveViewer';
+import DiscoverTab from './components/DiscoverTab';
+import type { PublicLive } from './types';
 import { useSocket } from './hooks/useSocket';
 import type { UserProfile, Track, Coordinates, ChatStatus, ChatConversation, IncomingChatRequest, NearbyUser, ChatPeer, Rating } from './types';
 
@@ -55,9 +57,10 @@ export default function App() {
   const [donateTarget, setDonateTarget]           = useState<NearbyUser | null>(null);
   const [showDonateApp, setShowDonateApp]         = useState(false);
   const [showLiveBroadcast, setShowLiveBroadcast] = useState(false);
-  const [watchingLive, setWatchingLive]           = useState<NearbyUser | null>(null);
+  const [watchingLive, setWatchingLive]           = useState<NearbyUser | PublicLive | null>(null);
   const [amLive, setAmLive]                       = useState(false);
   const [liveViewers, setLiveViewers]             = useState(0);
+  const [view, setView]                           = useState<'nearby' | 'discover'>('nearby');
   const [ratingsCache, setRatingsCache]           = useState<Record<string, Rating[]>>({});
   const [myRatings, setMyRatings]                 = useState<Record<string, string>>({}); // targetId → vibe
   const [focusPosition, setFocusPosition]   = useState<Coordinates | null>(null);
@@ -386,19 +389,50 @@ export default function App() {
           </div>
         )}
 
-        {/* Content — always nearby list */}
+        {/* Tabs: Proximité / Découvrir */}
+        <div className="flex gap-1 px-4 pb-2 flex-shrink-0">
+          {([
+            ['nearby',   '🎵', 'Proximité'],
+            ['discover', '🔴', 'Découvrir'],
+          ] as const).map(([id, icon, label]) => (
+            <button key={id} onClick={() => setView(id)}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200"
+              style={view === id
+                ? { background: id === 'discover' ? 'rgba(239,68,68,0.2)' : profile.color + '22',
+                    color: id === 'discover' ? '#ef4444' : profile.color }
+                : { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.35)' }}>
+              {icon} {label}
+              {id === 'discover' && socket.publicLives.length > 0 && (
+                <span className="ml-0.5 w-4 h-4 rounded-full text-xs font-black flex items-center justify-center bg-red-500 text-white" style={{ fontSize: 9 }}>
+                  {socket.publicLives.length}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Content */}
         <div className="flex-1 min-h-0 px-4 pb-4 overflow-hidden flex flex-col">
-          <NearbyList
-            users={socket.nearbyUsers}
-            radius={radius}
-            onRadiusChange={handleRadiusChange}
+          {view === 'nearby' ? (
+            <NearbyList
+              users={socket.nearbyUsers}
+              radius={radius}
+              onRadiusChange={handleRadiusChange}
               onSelectUser={(pos) => setFocusPosition(pos)}
               onChatUser={handleStartChat}
               onViewProfile={handleOpenProfile}
               onWatchLive={(user) => setWatchingLive(user)}
-            myChatStatus={chatStatus}
-            accentColor={profile.color}
-          />
+              myChatStatus={chatStatus}
+              accentColor={profile.color}
+            />
+          ) : (
+            <DiscoverTab
+              lives={socket.publicLives}
+              onWatch={(live) => setWatchingLive(live as unknown as NearbyUser)}
+              onRefresh={socket.getPublicLivesReq}
+              accentColor={profile.color}
+            />
+          )}
         </div>
       </aside>
 
@@ -493,7 +527,8 @@ export default function App() {
           profile={profile}
           viewers={liveViewers}
           isLive={amLive}
-          onStartLive={(title) => { socket.startLive(title); setAmLive(true); }}
+          onStartLive={(title, isPublic) => { socket.startLive(title, isPublic); setAmLive(true); }}
+          onUpdateLive={(title, isPublic) => socket.updateLive(title, isPublic)}
           onStopLive={() => { socket.stopLive(); setAmLive(false); setLiveViewers(0); setShowLiveBroadcast(false); }}
           onSendOffer={socket.sendOffer}
           onSendIce={socket.sendIce}
@@ -507,7 +542,7 @@ export default function App() {
       {/* Live viewer */}
       {watchingLive && (
         <LiveViewer
-          broadcaster={watchingLive}
+          broadcaster={watchingLive as NearbyUser}
           myId=""
           onClose={() => setWatchingLive(null)}
           onJoinLive={socket.joinLive}

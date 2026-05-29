@@ -12,7 +12,8 @@ const STUN_SERVERS = {
 interface Props {
   profile: UserProfile;
   viewers: number;
-  onStartLive: (title: string) => void;
+  onStartLive: (title: string, isPublic: boolean) => void;
+  onUpdateLive?: (title: string, isPublic: boolean) => void;
   onStopLive: () => void;
   onSendOffer:   (viewerId: string, offer: RTCSessionDescriptionInit) => void;
   onSendIce:     (viewerId: string, candidate: RTCIceCandidateInit) => void;
@@ -25,7 +26,7 @@ interface Props {
 
 export default function LiveBroadcast({
   profile, viewers,
-  onStartLive, onStopLive,
+  onStartLive, onUpdateLive, onStopLive,
   onSendOffer, onSendIce,
   onAnswerReceived, onIceReceived, onViewerJoined, onViewerLeft,
 }: Props) {
@@ -38,6 +39,7 @@ export default function LiveBroadcast({
   const [muted, setMuted]       = useState(false);
   const [camOff, setCamOff]     = useState(false);
   const [facingMode] = useState<'user' | 'environment'>('user');
+  const [isPublic, setIsPublic] = useState(false);
   const [error, setError]       = useState<string | null>(null);
   const [elapsed, setElapsed]   = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -59,7 +61,7 @@ export default function LiveBroadcast({
   }
 
   function goLive() {
-    onStartLive(title.trim() || `Live de ${profile.username}`);
+    onStartLive(title.trim() || `Live de ${profile.username}`, isPublic);
     setStep('live');
     timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000);
   }
@@ -190,9 +192,39 @@ export default function LiveBroadcast({
       <div className="flex-shrink-0 px-5 py-5"
         style={{ background: 'rgba(0,0,0,0.8)' }}>
         {step === 'preview' && (
-          <input className="wl-input w-full rounded-xl px-4 py-2.5 text-sm mb-4"
-            placeholder="Titre du live (optionnel)…"
-            value={title} onChange={e => setTitle(e.target.value)} />
+          <>
+            <input className="wl-input w-full rounded-xl px-4 py-2.5 text-sm mb-3"
+              placeholder="Titre du live (optionnel)…"
+              value={title} onChange={e => setTitle(e.target.value)} />
+            {/* Public toggle */}
+            <button onClick={() => setIsPublic(p => !p)}
+              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl mb-4 transition-all"
+              style={isPublic
+                ? { background: 'rgba(139,92,246,0.2)', border: '1.5px solid rgba(139,92,246,0.5)' }
+                : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }
+              }>
+              <div className={`w-10 h-6 rounded-full flex-shrink-0 relative transition-all duration-200 ${isPublic ? 'bg-violet-500' : 'bg-white/20'}`}>
+                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-200 shadow ${isPublic ? 'left-5' : 'left-1'}`} />
+              </div>
+              <div className="text-left flex-1">
+                <div className="text-sm font-semibold text-white">{isPublic ? '🌍 Live public' : '🔒 Live privé (proximité seule)'}</div>
+                <div className="text-xs text-white/40 mt-0.5">
+                  {isPublic ? 'Visible dans l\'onglet Découvrir par tous' : 'Visible uniquement par les personnes à proximité'}
+                </div>
+              </div>
+            </button>
+          </>
+        )}
+        {step === 'live' && (
+          /* Public toggle during live */
+          <button onClick={() => { setIsPublic(p => { const next = !p; onUpdateLive?.(title, next); return next; }); }}
+            className="w-full flex items-center gap-2 justify-center px-4 py-2 rounded-xl mb-4 text-xs font-semibold transition-all"
+            style={isPublic
+              ? { background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.4)', color: '#a78bfa' }
+              : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }
+            }>
+            {isPublic ? '🌍 Public — visible dans Découvrir' : '🔒 Privé — cliquer pour rendre public'}
+          </button>
         )}
         <div className="flex items-center justify-center gap-4">
           {/* Mute */}
