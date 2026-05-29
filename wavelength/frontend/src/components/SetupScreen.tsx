@@ -70,8 +70,8 @@ export default function SetupScreen({ onComplete }: Props) {
             style={{ background: 'linear-gradient(135deg, #8b5cf6, #ec4899)' }}>
             <Music2 className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-bold gradient-text">Melo</h1>
-          <p className="text-xs text-white/40 mt-0.5">Découvre la musique autour de toi</p>
+          <h1 className="text-3xl font-black tracking-tight gradient-text">MeloSong</h1>
+          <p className="text-xs text-white/40 mt-1">Découvre la musique autour de toi</p>
         </div>
 
         {/* Step indicators */}

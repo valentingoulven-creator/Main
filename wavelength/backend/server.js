@@ -400,4 +400,4 @@ app.get('/health', (_req, res) =>
 );
 
 const PORT = process.env.PORT || 3001;
-httpServer.listen(PORT, () => console.log(`🎵 Melo backend → http://localhost:${PORT}`));
+httpServer.listen(PORT, () => console.log(`🎵 MeloSong backend → http://localhost:${PORT}`));
