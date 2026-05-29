@@ -11,14 +11,19 @@ export interface Track {
   url?: string;
 }
 
+export type PlatformKey = 'spotify' | 'deezer' | 'youtube' | 'youtubemusic';
+export type ConnectedApps = Partial<Record<PlatformKey, string>>;
+
 export interface UserProfile {
   username: string;
   color: string;
   emoji: string;
   bio?: string;
   interests?: string[];
-  photos?: string[]; // base64 data URLs or https:// URLs, max 3
+  photos?: string[];
   jamUrl?: string;
+  address?: string;
+  connectedApps?: ConnectedApps;
 }
 
 export type ChatStatus = 'available' | 'busy' | 'dnd';
@@ -36,6 +41,8 @@ export interface NearbyUser {
   interests?: string[];
   photos?: string[];
   jamUrl?: string;
+  address?: string;
+  connectedApps?: ConnectedApps;
   isMock?: boolean;
 }
 

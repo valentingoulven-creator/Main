@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Wifi, WifiOff, MapIcon, List, Navigation, AlertCircle, Loader2, UserCircle2 } from 'lucide-react';
+import { Wifi, WifiOff, Navigation, AlertCircle, Loader2, UserCircle2 } from 'lucide-react';
 import SetupScreen from './components/SetupScreen';
 import NowPlaying from './components/NowPlaying';
 import TrackInput from './components/TrackInput';
@@ -36,7 +36,6 @@ export default function App() {
   const [myJamUrl, setMyJamUrl]     = useState<string>(() => localStorage.getItem(JAM_KEY) ?? '');
   const [radius, setRadius]         = useState(2000);
   const [chatStatus, setChatStatus] = useState<ChatStatus>(loadChatStatus);
-  const [view, setView]             = useState<'list' | 'map'>('list');
   const [showTrackInput, setShowTrackInput] = useState(false);
   const [showProfileEditor, setShowProfileEditor] = useState(false);
   const [focusPosition, setFocusPosition]   = useState<Coordinates | null>(null);
@@ -296,40 +295,18 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab bar */}
-        <div className="flex gap-1 px-4 pb-2 flex-shrink-0">
-          {([['list', <List key="l" className="w-3.5 h-3.5" />, 'Proximité'],
-             ['map',  <MapIcon key="m" className="w-3.5 h-3.5" />, 'Carte']] as const).map(([id, icon, label]) => (
-            <button key={id} onClick={() => setView(id)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200"
-              style={view === id
-                ? { background: profile.color + '22', color: profile.color }
-                : { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.35)' }}>
-              {icon}{label}
-            </button>
-          ))}
-        </div>
-
-        {/* Content */}
+        {/* Content — always nearby list */}
         <div className="flex-1 min-h-0 px-4 pb-4 overflow-hidden flex flex-col">
-          {view === 'list' ? (
-            <NearbyList
-              users={socket.nearbyUsers}
-              radius={radius}
-              onRadiusChange={handleRadiusChange}
-              onSelectUser={(pos) => { setFocusPosition(pos); setView('map'); }}
-              onChatUser={handleStartChat}
-              onViewProfile={setViewedProfile}
-              myChatStatus={chatStatus}
-              accentColor={profile.color}
-            />
-          ) : (
-            <div className="flex-1 rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
-              {geo.position
-                ? <MapView myPosition={geo.position} profile={profile} nearbyUsers={socket.nearbyUsers} focusPosition={focusPosition} />
-                : <div className="h-full flex items-center justify-center text-sm text-white/30">Active la localisation pour voir la carte</div>}
-            </div>
-          )}
+          <NearbyList
+            users={socket.nearbyUsers}
+            radius={radius}
+            onRadiusChange={handleRadiusChange}
+            onSelectUser={(pos) => setFocusPosition(pos)}
+            onChatUser={handleStartChat}
+            onViewProfile={setViewedProfile}
+            myChatStatus={chatStatus}
+            accentColor={profile.color}
+          />
         </div>
       </aside>
 

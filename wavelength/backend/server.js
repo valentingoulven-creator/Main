@@ -37,57 +37,65 @@ function offsetCoords(lat, lng, dN, dE) {
 const MOCK_DATA = [
   {
     username: 'Sophie',  color: '#8b5cf6', emoji: '🎵',
-    bio: 'Passionnée de musique électro et de festivals 🎪',
+    bio: 'Passionnée de musique électro et de festivals 🎪', address: 'Paris 75010',
     interests: ['Électro 🥁', 'Festivals 🎪', 'Danse 💃', 'Art 🎨'],
+    connectedApps: { spotify: 'https://open.spotify.com/user/sophie_demo', deezer: 'sophie_melo' },
     track: { title: 'Blinding Lights', artist: 'The Weeknd', source: 'spotify', url: 'https://open.spotify.com/track/0VjIjW4GlUZAMYd2vXMi3b' },
     jamUrl: 'https://open.spotify.com/jam/demo-sophie',
   },
   {
     username: 'Alex',    color: '#ec4899', emoji: '🎸',
-    bio: 'Guitariste amateur, je joue du rock depuis 10 ans 🎸',
+    bio: 'Guitariste amateur, je joue du rock depuis 10 ans 🎸', address: 'Lyon 69001',
     interests: ['Rock 🎸', 'Concerts 🎤', 'Gaming 🎮', 'Cinéma 🎬'],
+    connectedApps: { youtube: '@alex_guitar_lyon', youtubemusic: '@alex_guitar_lyon' },
     track: { title: 'Levitating', artist: 'Dua Lipa', source: 'spotify', url: 'https://open.spotify.com/track/463CkQjx2Zk1yXoBuierM9' },
     jamUrl: null,
   },
   {
     username: 'Léa',     color: '#3b82f6', emoji: '🎹',
-    bio: 'Pianiste classique qui découvre le jazz ✨',
+    bio: 'Pianiste classique qui découvre le jazz ✨', address: 'Bordeaux 33000',
     interests: ['Classique 🎻', 'Jazz 🎷', 'Lecture 📚', 'Voyages ✈️'],
+    connectedApps: { spotify: 'lea_piano', deezer: 'lea_classique' },
     track: { title: 'As It Was', artist: 'Harry Styles', source: 'spotify', url: 'https://open.spotify.com/track/4Dvkj6JhhA12EX05fT7y2e' },
     jamUrl: null,
   },
   {
     username: 'Noah',    color: '#10b981', emoji: '🎤',
-    bio: 'Fan de rap et de battles freestyle 🔥',
+    bio: 'Fan de rap et de battles freestyle 🔥', address: 'Marseille 13001',
     interests: ['Hip-Hop 🎤', 'Sport 🏃', 'Mode 👗', 'Tech 💻'],
+    connectedApps: { spotify: 'noah_hiphop', youtube: '@noah_freestyle' },
     track: { title: 'Bad Guy', artist: 'Billie Eilish', source: 'spotify', url: 'https://open.spotify.com/track/2Fxmhks0live4K2e4x4b6p' },
     jamUrl: 'https://open.spotify.com/jam/demo-noah',
   },
   {
     username: 'Emma',    color: '#f59e0b', emoji: '🥁',
-    bio: 'Batteuse et fan de Queen depuis toujours 👑',
+    bio: 'Batteuse et fan de Queen depuis toujours 👑', address: 'Toulouse 31000',
     interests: ['Rock 🎸', 'Metal 🔊', 'Gastronomie 🍕', 'Nature 🌿'],
+    connectedApps: { youtube: '@emma_drums', deezer: 'emma_queen_fan' },
     track: { title: 'Bohemian Rhapsody', artist: 'Queen', source: 'youtube', url: 'https://www.youtube.com/watch?v=fJ9rUzIMcZQ' },
     jamUrl: null,
   },
   {
     username: 'Lucas',   color: '#06b6d4', emoji: '🎧',
-    bio: 'DJ amateur en soirée, producteur le week-end 🎚️',
+    bio: 'DJ amateur en soirée, producteur le week-end 🎚️', address: 'Nantes 44000',
     interests: ['Électro 🥁', 'R&B 🎶', 'Photo 📷', 'Voyages ✈️'],
+    connectedApps: { spotify: 'lucas_dj_nantes', deezer: 'lucas_dj', youtubemusic: '@lucas_beats' },
     track: { title: 'Stay', artist: 'The Kid LAROI', source: 'spotify', url: 'https://open.spotify.com/track/5HCyWlXZPP0y6Gqq8TgA20' },
     jamUrl: 'https://open.spotify.com/jam/demo-lucas',
   },
   {
     username: 'Manon',   color: '#f97316', emoji: '🎻',
-    bio: 'Violoniste de formation, ouverte à tous les genres 🎶',
+    bio: 'Violoniste de formation, ouverte à tous les genres 🎶', address: 'Strasbourg 67000',
     interests: ['Classique 🎻', 'Folk 🌿', 'Danse 💃', 'Art 🎨'],
+    connectedApps: { spotify: 'manon_violon', deezer: 'manon_classique' },
     track: { title: 'Montero', artist: 'Lil Nas X', source: 'spotify', url: null },
     jamUrl: null,
   },
   {
     username: 'Thomas',  color: '#ef4444', emoji: '🎷',
-    bio: 'Saxophoniste de jazz, je joue dans les rues le soir 🌙',
+    bio: 'Saxophoniste de jazz, je joue dans les rues le soir 🌙', address: 'Nice 06000',
     interests: ['Jazz 🎷', 'R&B 🎶', 'Cinéma 🎬', 'Gastronomie 🍕'],
+    connectedApps: { youtube: '@thomas_sax_nice', youtubemusic: '@thomas_sax_nice' },
     track: { title: 'Starboy', artist: 'The Weeknd & Daft Punk', source: 'spotify', url: null },
     jamUrl: null,
   },
@@ -139,6 +147,8 @@ function initMockUsers(lat, lng) {
       bio: data.bio,
       interests: data.interests,
       photos: [],
+      address: data.address ?? '',
+      connectedApps: data.connectedApps ?? {},
       position: pos,
       track: data.track,
       jamUrl: data.jamUrl,
@@ -163,6 +173,8 @@ function getPublicUser(user) {
     bio: user.bio ?? '',
     interests: user.interests ?? [],
     photos: user.photos ?? [],
+    address: user.address ?? '',
+    connectedApps: user.connectedApps ?? {},
     position: user.position,
     track: user.track,
     jamUrl: user.jamUrl ?? null,
@@ -211,6 +223,8 @@ io.on('connection', (socket) => {
       bio: data.bio ?? '',
       interests: data.interests ?? [],
       photos: data.photos ?? [],
+      address: data.address ?? '',
+      connectedApps: data.connectedApps ?? {},
       position: data.position ?? null,
       track: data.track ?? null,
       jamUrl: data.jamUrl ?? null,
@@ -245,12 +259,14 @@ io.on('connection', (socket) => {
   socket.on('update_profile', (data) => {
     const u = connectedUsers.get(socket.id);
     if (!u) return;
-    if (data.bio      !== undefined) u.bio      = data.bio;
-    if (data.interests!== undefined) u.interests= data.interests;
-    if (data.photos   !== undefined) u.photos   = data.photos;
-    if (data.jamUrl   !== undefined) u.jamUrl   = data.jamUrl;
-    if (data.color    !== undefined) u.color    = data.color;
-    if (data.emoji    !== undefined) u.emoji    = data.emoji;
+    if (data.bio           !== undefined) u.bio           = data.bio;
+    if (data.interests     !== undefined) u.interests     = data.interests;
+    if (data.photos        !== undefined) u.photos        = data.photos;
+    if (data.jamUrl        !== undefined) u.jamUrl        = data.jamUrl;
+    if (data.address       !== undefined) u.address       = data.address;
+    if (data.connectedApps !== undefined) u.connectedApps = data.connectedApps;
+    if (data.color         !== undefined) u.color         = data.color;
+    if (data.emoji         !== undefined) u.emoji         = data.emoji;
     u.lastSeen = Date.now();
     pushAll();
   });
