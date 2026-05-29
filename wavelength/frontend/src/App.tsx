@@ -23,7 +23,7 @@ import LiveBroadcast from './components/LiveBroadcast';
 import LiveSetupModal from './components/LiveSetupModal';
 import type { LiveVisibility } from './components/LiveSetupModal';
 import LiveViewer from './components/LiveViewer';
-import DiscoverView from './components/DiscoverView';
+import LiveFeed from './components/LiveFeed';
 import BottomNav from './components/BottomNav';
 import { YouTubeSessionSetup, YouTubeSessionHost, YouTubeSessionViewer } from './components/YouTubeSession';
 import type { YTSession } from './types';
@@ -360,6 +360,55 @@ export default function App() {
 
   return (
     <div className="app-bg flex flex-col overflow-hidden" style={{ height: '100dvh' }}>
+
+      {/* ── Fullscreen Discover mode ──────────────────────────────────── */}
+      {(view === 'discover' || mobileTab === 'discover') && (
+        <div className="fixed inset-0 z-[300] flex flex-col" style={{ background: '#0d0d1a' }}>
+          {/* Minimal top bar */}
+          <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0"
+            style={{ background: 'rgba(10,10,20,0.9)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+            <button onClick={() => { setView('nearby'); if (mobileTab === 'discover') setMobileTab('nearby'); }}
+              className="flex items-center gap-1.5 text-xs font-bold text-white/60 hover:text-white transition-colors">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+              Retour
+            </button>
+            <div className="flex-1 flex items-center gap-2 justify-center">
+              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+              <span className="text-sm font-black text-white">Lives publics</span>
+              {socket.publicLives.length > 0 && (
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+                  style={{ background: 'rgba(239,68,68,0.2)', color: '#ef4444' }}>
+                  {socket.publicLives.length}
+                </span>
+              )}
+            </div>
+            <button onClick={socket.getPublicLivesReq}
+              className="text-xs text-white/30 hover:text-white/60 transition-colors p-1.5 rounded-lg hover:bg-white/10">
+              ↻
+            </button>
+          </div>
+          {/* Full-screen feed */}
+          <div className="flex-1 overflow-hidden">
+            <LiveFeed
+              lives={socket.publicLives}
+              onWatch={(live) => setWatchingLive(live as unknown as NearbyUser)}
+              onRefresh={socket.getPublicLivesReq}
+              accentColor={profile.color}
+              profile={profile}
+            />
+          </div>
+          {/* Bottom nav on mobile */}
+          <div className="md:hidden flex-shrink-0">
+            <BottomNav
+              active={mobileTab}
+              onChange={(t) => { setMobileTab(t); if (t !== 'discover') setView('nearby'); if (t === 'discover') socket.getPublicLivesReq(); }}
+              accentColor={profile.color}
+              discoverCount={socket.publicLives.length}
+            />
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-1 overflow-hidden">
 
       {/* ── Left panel: full width on mobile (nearby tab), 400px fixed on desktop ── */}
@@ -641,21 +690,9 @@ export default function App() {
       <main className={`flex-1 flex flex-col overflow-hidden
         ${mobileTab === 'nearby' ? 'hidden md:flex' : 'flex'}`}>
         {/* Ad banner — only on map view */}
-        {view !== 'discover' && <AdBanner />}
+        <AdBanner />
 
-        {/* Live feed (Découvrir) replaces map — also on mobile discover tab */}
-        {view === 'discover' || mobileTab === 'discover' ? (
-          <div className="flex-1 overflow-hidden">
-            <DiscoverView
-              lives={socket.publicLives}
-              onWatch={(live) => setWatchingLive(live as unknown as NearbyUser)}
-              onRefresh={socket.getPublicLivesReq}
-              accentColor={profile.color}
-              profile={profile}
-              onSendDM={(live) => handleStartChat(live as unknown as NearbyUser)}
-            />
-          </div>
-        ) : (
+        {/* Map */}
         <div className="flex-1 relative overflow-hidden">
         {geo.position ? (
           <MapView myPosition={geo.position} profile={profile} nearbyUsers={socket.nearbyUsers} focusPosition={focusPosition}
@@ -751,8 +788,7 @@ export default function App() {
             <div className="text-2xl font-bold gradient-text">{socket.nearbyUsers.length}</div>
           </div>
         )}
-        </div>
-        )}{/* end map wrapper + discover/map conditional */}
+        </div>{/* end map flex div */}
       </main>
       </div>{/* end flex-1 row */}
 
