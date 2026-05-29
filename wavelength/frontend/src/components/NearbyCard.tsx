@@ -43,13 +43,13 @@ export default function NearbyCard({ user, onClick, onChat, onWatchLive, onJoinY
       style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
       onClick={onClick}
     >
-      <div className="flex items-center gap-3 p-3.5">
+      <div className="flex items-center gap-4 p-5">
         {/* Avatar */}
         <div className="relative flex-shrink-0">
           {user.photos?.[0] ? (
-            <img src={user.photos[0]} className="w-11 h-11 rounded-full object-cover shadow-md" />
+            <img src={user.photos[0]} className="w-16 h-16 rounded-full object-cover shadow-md" />
           ) : (
-            <div className="w-11 h-11 rounded-full flex items-center justify-center text-xl shadow-md"
+            <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl shadow-md"
               style={{ background: user.color }}>
               {user.emoji}
             </div>
@@ -71,12 +71,12 @@ export default function NearbyCard({ user, onClick, onChat, onWatchLive, onJoinY
         {/* Info */}
         <div className="flex-1 min-w-0">
           {/* Name row — distance et Jam réduits */}
-          <div className="flex items-center gap-1.5 mb-1">
-            <span className="text-sm font-bold text-white truncate">{user.username}</span>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-base font-bold text-white truncate">{user.username}</span>
 
             {/* Distance — petit */}
-            <span className="px-1 py-0.5 rounded-md flex-shrink-0 font-semibold text-white/40"
-              style={{ fontSize: 9, background: 'rgba(255,255,255,0.07)' }}>
+            <span className="px-1.5 py-0.5 rounded-md flex-shrink-0 font-semibold text-white/40"
+              style={{ fontSize: 10, background: 'rgba(255,255,255,0.07)' }}>
               {formatDist(user.distance)}
             </span>
 
@@ -92,13 +92,13 @@ export default function NearbyCard({ user, onClick, onChat, onWatchLive, onJoinY
           {/* Track — plus grand et mis en valeur */}
           {/* Bio — milieu de la carte */}
           {user.bio && (
-            <p className="text-xs text-white/45 leading-snug truncate mt-0.5 mb-1">{user.bio}</p>
+            <p className="text-xs text-white/50 leading-snug truncate mt-0.5 mb-1.5">{user.bio}</p>
           )}
 
           {track ? (
             <div className="flex items-center gap-2 min-w-0">
               {/* Waveform */}
-              <div className="wave-bars flex-shrink-0" style={{ color: user.color, height: 14 }}>
+              <div className="wave-bars flex-shrink-0" style={{ color: user.color, height: 16 }}>
                 {[1,2,3,4,5].map(i => <div key={i} className="wave-bar" />)}
               </div>
               {/* Platform logo */}
@@ -121,7 +121,7 @@ export default function NearbyCard({ user, onClick, onChat, onWatchLive, onJoinY
 
         {/* Album art — slightly larger */}
         {track?.albumArt && (
-          <img src={track.albumArt} alt="" className="w-12 h-12 rounded-xl object-cover flex-shrink-0 shadow-md" />
+          <img src={track.albumArt} alt="" className="w-14 h-14 rounded-xl object-cover flex-shrink-0 shadow-md" />
         )}
 
         {/* External link */}
@@ -136,7 +136,7 @@ export default function NearbyCard({ user, onClick, onChat, onWatchLive, onJoinY
 
         {/* Favorite button */}
         <button onClick={toggleFav}
-          className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90"
+          className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition-all active:scale-90"
           style={fav ? { background: 'rgba(251,191,36,0.2)' } : { background: 'rgba(255,255,255,0.06)' }}
           title={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'}>
           <Star className="w-4 h-4" style={{ color: fav ? '#fbbf24' : 'rgba(255,255,255,0.3)', fill: fav ? '#fbbf24' : 'none' }} />
