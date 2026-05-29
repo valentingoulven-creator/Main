@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Wifi, WifiOff, Navigation, AlertCircle, Loader2, UserCircle2, MapPin, Heart } from 'lucide-react';
+import { YouTubeLogo } from './components/SourceLogo';
 import { MeloSongLockup, MeloSongMark } from './components/MeloSongLogo';
 import SetupScreen from './components/SetupScreen';
 import AuthScreen from './components/AuthScreen';
@@ -25,6 +26,8 @@ import type { LiveVisibility } from './components/LiveSetupModal';
 import LiveViewer from './components/LiveViewer';
 import DiscoverView from './components/DiscoverView';
 import BottomNav from './components/BottomNav';
+import { YouTubeSessionSetup, YouTubeSessionHost, YouTubeSessionViewer } from './components/YouTubeSession';
+import type { YTSession } from './types';
 import SpotifyConnect from './components/SpotifyConnect';
 import YouTubeConnect from './components/YouTubeConnect';
 import EmailVerifyBanner, { VerifiedBadge } from './components/EmailVerifyBanner';
@@ -79,7 +82,13 @@ export default function App() {
   const spotifyLinked = myTrack?.source === 'spotify';
   const [showYouTubeConnect, setShowYouTubeConnect] = useState(false);
   const [youtubeLinked, setYoutubeLinked]           = useState(ytConnected);
-  const [showLiveSetup, setShowLiveSetup]         = useState(false);
+  const [showLiveSetup, setShowLiveSetup]           = useState(false);
+  // YouTube Sessions
+  const [showYTSetup, setShowYTSetup]               = useState(false);
+  const [myYTSession, setMyYTSession]               = useState<YTSession | null>(null);
+  const [joiningYT, setJoiningYT]                   = useState<{ host: NearbyUser; session: YTSession } | null>(null);
+  const ytStateCbRef = useRef<((state: 'playing'|'paused', t: number, ts: number) => void) | null>(null);
+  const ytEndedCbRef = useRef<((hostId: string) => void) | null>(null);
   const [showLiveBroadcast, setShowLiveBroadcast] = useState(false);
   const [liveSetupData, setLiveSetupData]         = useState<{ title: string; visibility: LiveVisibility } | null>(null);
   const [watchingLive, setWatchingLive]           = useState<NearbyUser | PublicLive | null>(null);
@@ -109,6 +118,16 @@ export default function App() {
       window.history.replaceState({}, '', '/');
     }
   }, []);
+
+  // Register YT session callbacks
+  useEffect(() => {
+    const us = socket.onYTSessionState((d) => ytStateCbRef.current?.(d.state as 'playing'|'paused', d.currentTime, (d as {ts?:number}).ts ?? Date.now()));
+    const ue = socket.onYTSessionEnded((d) => {
+      ytEndedCbRef.current?.(d.hostId);
+      if (joiningYT?.host.id === d.hostId) setJoiningYT(null);
+    });
+    return () => { us(); ue(); };
+  }, [socket, joiningYT?.host.id]);
 
   // Register live callbacks
   useEffect(() => {
@@ -293,6 +312,12 @@ export default function App() {
     socket.sendRating(ratingTarget.id, vibe, note, anonymous);
     setMyRatings(prev => ({ ...prev, [ratingTarget.id]: vibe }));
   }, [socket, ratingTarget]);
+
+  const handleJoinYTSession = useCallback((user: NearbyUser) => {
+    if (!user.ytSession) return;
+    socket.ytJoinSession(user.id);
+    setJoiningYT({ host: user, session: user.ytSession });
+  }, [socket]);
 
   const handleCloseChat = useCallback((id: string) => {
     socket.closeChat(id);
@@ -497,6 +522,17 @@ export default function App() {
           </div>
 
           <NowPlaying profile={profile} track={myTrack} jamUrl={myJamUrl} onEdit={() => setShowTrackInput(true)} />
+          {/* YouTube session button */}
+          <button onClick={() => myYTSession ? undefined : setShowYTSetup(true)}
+            className="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold text-white transition-all active:scale-95 hover:opacity-90"
+            style={myYTSession
+              ? { background: 'rgba(255,0,0,0.2)', border: '1px solid rgba(255,0,0,0.4)', color: '#ff4444' }
+              : { background: 'rgba(255,0,0,0.08)', border: '1px solid rgba(255,0,0,0.18)', color: 'rgba(255,255,255,0.5)' }
+            }>
+            <YouTubeLogo size={14} className="flex-shrink-0" />
+            {myYTSession ? `Session YouTube — ${myYTSession.participants} auditeur${myYTSession.participants > 1 ? 's' : ''}` : 'Session d\'écoute YouTube'}
+          </button>
+
           {/* Go Live button */}
           <button onClick={() => amLive ? setShowLiveBroadcast(true) : setShowLiveSetup(true)}
             className="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold text-white transition-all active:scale-95 hover:opacity-90"
@@ -575,6 +611,7 @@ export default function App() {
               onChatUser={handleStartChat}
               onViewProfile={handleOpenProfile}
               onWatchLive={(user) => setWatchingLive(user)}
+              onJoinYT={handleJoinYTSession}
               myChatStatus={chatStatus}
               accentColor={profile.color}
             />
@@ -751,6 +788,47 @@ export default function App() {
         <ChatWindow key={conv.peer.id} conv={conv} onSend={(text) => handleSendMessage(conv.peer.id, text)}
           onClose={() => handleCloseChat(conv.peer.id)} myColor={profile.color} index={i} />
       ))}
+
+      {/* YouTube Session Setup */}
+      {showYTSetup && (
+        <YouTubeSessionSetup
+          onClose={() => setShowYTSetup(false)}
+          onStart={(videoId, title, videoTitle) => {
+            setShowYTSetup(false);
+            socket.ytCreateSession(videoId, title, videoTitle);
+            setMyYTSession({ videoId, title, videoTitle, participants: 0, state: 'paused', currentTime: 0, startedAt: Date.now() });
+          }}
+        />
+      )}
+
+      {/* YouTube Session Host */}
+      {myYTSession && !joiningYT && (
+        <YouTubeSessionHost
+          videoId={myYTSession.videoId}
+          sessionTitle={myYTSession.title}
+          participants={myYTSession.participants}
+          hostSocketId={socket.ytGetSessionId() ?? 'host'}
+          profile={profile}
+          onSync={(state, t) => socket.ytSyncSession(state, t)}
+          onEnd={() => { socket.ytEndSession(); setMyYTSession(null); }}
+        />
+      )}
+
+      {/* YouTube Session Viewer */}
+      {joiningYT && (
+        <YouTubeSessionViewer
+          host={joiningYT.host}
+          videoId={joiningYT.session.videoId}
+          sessionTitle={joiningYT.session.title}
+          hostSocketId={joiningYT.host.id}
+          profile={profile}
+          initialTime={joiningYT.session.currentTime}
+          initialState={joiningYT.session.state}
+          onLeave={() => { socket.ytLeaveSession(joiningYT.host.id); setJoiningYT(null); }}
+          onStateUpdate={(cb) => { ytStateCbRef.current = cb; return () => { ytStateCbRef.current = null; }; }}
+          onSessionEnded={(cb) => { ytEndedCbRef.current = cb; return () => { ytEndedCbRef.current = null; }; }}
+        />
+      )}
 
       {/* Settings panel */}
       {showSettings && session && (
