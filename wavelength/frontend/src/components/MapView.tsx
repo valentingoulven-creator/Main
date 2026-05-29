@@ -74,9 +74,14 @@ interface Props {
   profile: UserProfile;
   nearbyUsers: NearbyUser[];
   focusPosition: Coordinates | null;
+  tileUrl?: string;
+  tileUrl2?: string;
+  attribution?: string;
 }
 
-export default function MapView({ myPosition, profile, nearbyUsers, focusPosition }: Props) {
+const DEFAULT_TILE = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+
+export default function MapView({ myPosition, profile, nearbyUsers, focusPosition, tileUrl, tileUrl2, attribution }: Props) {
   const center: [number, number] = myPosition
     ? [myPosition.lat, myPosition.lng]
     : [48.8566, 2.3522];
@@ -89,11 +94,11 @@ export default function MapView({ myPosition, profile, nearbyUsers, focusPositio
         }
       `}</style>
       <MapContainer center={center} zoom={15} style={{ width: '100%', height: '100%' }} zoomControl>
-        {/* CartoDB Dark All — bleu nuit */}
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>'
+          url={tileUrl ?? DEFAULT_TILE}
+          attribution={attribution ?? '© OpenStreetMap © CARTO'}
         />
+        {tileUrl2 && <TileLayer url={tileUrl2} attribution="" opacity={0.9} />}
 
         {focusPosition && <FlyTo center={focusPosition} />}
 

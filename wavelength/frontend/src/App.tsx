@@ -14,6 +14,8 @@ import RatingPicker from './components/RatingPicker';
 import { useGeolocation } from './hooks/useGeolocation';
 import GpsPicker from './components/GpsPicker';
 import AdBanner from './components/AdBanner';
+import MapStylePicker, { MAP_STYLES } from './components/MapStylePicker';
+import type { MapStyle } from './components/MapStylePicker';
 import { useSocket } from './hooks/useSocket';
 import type { UserProfile, Track, Coordinates, ChatStatus, ChatConversation, IncomingChatRequest, NearbyUser, ChatPeer, Rating } from './types';
 
@@ -44,6 +46,8 @@ export default function App() {
   const [showProfileEditor, setShowProfileEditor] = useState(false);
   const [showGpsPicker, setShowGpsPicker]         = useState(false);
   const [ratingTarget, setRatingTarget]           = useState<NearbyUser | null>(null);
+  const [mapStyle, setMapStyle]                   = useState<MapStyle>(MAP_STYLES[0]);
+  const [showMapPicker, setShowMapPicker]         = useState(false);
   const [ratingsCache, setRatingsCache]           = useState<Record<string, Rating[]>>({});
   const [myRatings, setMyRatings]                 = useState<Record<string, string>>({}); // targetId → vibe
   const [focusPosition, setFocusPosition]   = useState<Coordinates | null>(null);
@@ -362,7 +366,8 @@ export default function App() {
         {/* Map or empty state */}
         <div className="flex-1 relative overflow-hidden">
         {geo.position ? (
-          <MapView myPosition={geo.position} profile={profile} nearbyUsers={socket.nearbyUsers} focusPosition={focusPosition} />
+          <MapView myPosition={geo.position} profile={profile} nearbyUsers={socket.nearbyUsers} focusPosition={focusPosition}
+            tileUrl={mapStyle.url} tileUrl2={mapStyle.url2} attribution={mapStyle.attribution} />
         ) : (
           <div className="h-full flex flex-col items-center justify-center gap-4 text-center px-8">
             <MeloSongMark size={72} className="mb-3 opacity-60" />
@@ -393,13 +398,22 @@ export default function App() {
           </div>
         )}
 
-        {/* Listener count */}
-        {geo.position && socket.nearbyUsers.length > 0 && (
-          <div className="absolute top-4 right-4 z-[500] glass rounded-2xl px-4 py-2.5 animate-fade-in">
-            <div className="text-xs text-white/50 font-medium">Auditeurs proches</div>
-            <div className="text-2xl font-bold gradient-text">{socket.nearbyUsers.length}</div>
-          </div>
-        )}
+        {/* Map style + listener count */}
+        <div className="absolute top-4 right-4 z-[500] flex flex-col items-end gap-2">
+          <button
+            onClick={() => setShowMapPicker(true)}
+            className="glass flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-white/70
+              hover:text-white hover:bg-white/10 transition-all active:scale-95"
+          >
+            🗺️ {mapStyle.name}
+          </button>
+          {geo.position && socket.nearbyUsers.length > 0 && (
+            <div className="glass rounded-2xl px-4 py-2 animate-fade-in text-right">
+              <div className="text-xs text-white/50 font-medium">Auditeurs proches</div>
+              <div className="text-2xl font-bold gradient-text">{socket.nearbyUsers.length}</div>
+            </div>
+          )}
+        </div>
         </div>{/* end map wrapper */}
       </main>
 
@@ -432,6 +446,15 @@ export default function App() {
         <ChatWindow key={conv.peer.id} conv={conv} onSend={(text) => handleSendMessage(conv.peer.id, text)}
           onClose={() => handleCloseChat(conv.peer.id)} myColor={profile.color} index={i} />
       ))}
+
+      {/* Map style picker */}
+      {showMapPicker && (
+        <MapStylePicker
+          current={mapStyle.id}
+          onSelect={setMapStyle}
+          onClose={() => setShowMapPicker(false)}
+        />
+      )}
 
       {/* Rating picker */}
       {ratingTarget && (
