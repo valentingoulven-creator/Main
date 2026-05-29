@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { X, MessageCircle, ExternalLink, Music2, MapPin } from 'lucide-react';
+import { X, MessageCircle, ExternalLink, Music2, MapPin, Cake } from 'lucide-react';
 import type { NearbyUser } from '../types';
+import { calcAge } from '../utils/ageUtils';
 import { SpotifyLogo, YouTubeLogo, PLATFORMS } from './SourceLogo';
 
 interface Props {
@@ -67,6 +68,11 @@ export default function ProfileModal({ user, onClose, onChat, canChat }: Props) 
               <div className="text-base font-bold text-white truncate">{user.username}</div>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs text-white/40">{formatDist(user.distance)}</span>
+                {user.birthDate && (
+                  <span className="flex items-center gap-0.5 text-xs text-white/40">
+                    <Cake className="w-3 h-3" />{calcAge(user.birthDate)} ans
+                  </span>
+                )}
                 {user.address && (
                   <span className="flex items-center gap-0.5 text-xs text-white/35">
                     <MapPin className="w-3 h-3" />{user.address}

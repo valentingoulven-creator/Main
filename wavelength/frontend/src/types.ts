@@ -19,6 +19,7 @@ export interface UserProfile {
   color: string;
   emoji: string;
   bio?: string;
+  birthDate?: string; // ISO 'YYYY-MM-DD'
   interests?: string[];
   photos?: string[];
   jamUrl?: string;
@@ -38,6 +39,7 @@ export interface NearbyUser {
   distance: number;
   chatStatus?: ChatStatus;
   bio?: string;
+  birthDate?: string;
   interests?: string[];
   photos?: string[];
   jamUrl?: string;

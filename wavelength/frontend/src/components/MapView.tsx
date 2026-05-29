@@ -4,24 +4,27 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { NearbyUser, Coordinates, UserProfile } from '../types';
 
-function makeIcon(color: string, emoji: string, size = 38) {
-  return L.divIcon({
-    className: '',
-    html: `
-      <div style="position:relative;width:${size}px;height:${size}px">
-        <div style="
-          position:absolute;inset:0;border-radius:50%;
-          background:${color};
-          animation:ping 2.5s cubic-bezier(0,0,0.2,1) infinite;
-          opacity:0.35;
-        "></div>
-        <div style="
-          position:absolute;inset:4px;border-radius:50%;
+function makeIcon(color: string, emoji: string, photo?: string, size = 40) {
+  const inner = photo
+    ? `<div style="
+          position:absolute;inset:3px;border-radius:50%;
+          background-image:url('${photo}');background-size:cover;background-position:center;
+          box-shadow:0 2px 10px ${color}77;border:2px solid ${color};
+        "></div>`
+    : `<div style="
+          position:absolute;inset:3px;border-radius:50%;
           background:${color};
           display:flex;align-items:center;justify-content:center;
           font-size:${size * 0.42}px;
           box-shadow:0 2px 10px ${color}77;
-        ">${emoji}</div>
+        ">${emoji}</div>`;
+
+  return L.divIcon({
+    className: '',
+    html: `
+      <div style="position:relative;width:${size}px;height:${size}px">
+        <div style="position:absolute;inset:0;border-radius:50%;background:${color};animation:ping 2.5s cubic-bezier(0,0,0.2,1) infinite;opacity:0.3;"></div>
+        ${inner}
       </div>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
@@ -29,26 +32,28 @@ function makeIcon(color: string, emoji: string, size = 38) {
   });
 }
 
-function makeUserIcon(color: string, emoji: string) {
-  const size = 44;
+function makeUserIcon(color: string, emoji: string, photo?: string) {
+  const size = 46;
+  const inner = photo
+    ? `<div style="
+          position:absolute;inset:0;border-radius:50%;
+          background-image:url('${photo}');background-size:cover;background-position:center;
+          border:3px solid white;box-shadow:0 4px 16px ${color}88;
+        "></div>`
+    : `<div style="
+          position:absolute;inset:0;border-radius:50%;
+          background:${color};
+          display:flex;align-items:center;justify-content:center;
+          font-size:${size * 0.42}px;
+          border:3px solid white;box-shadow:0 4px 16px ${color}88;
+        ">${emoji}</div>`;
+
   return L.divIcon({
     className: '',
     html: `
       <div style="position:relative;width:${size}px;height:${size}px">
-        <div style="
-          position:absolute;inset:-6px;border-radius:50%;
-          background:${color};
-          animation:ping 2s cubic-bezier(0,0,0.2,1) infinite;
-          opacity:0.2;
-        "></div>
-        <div style="
-          position:absolute;inset:0;border-radius:50%;
-          background:${color};
-          display:flex;align-items:center;justify-content:center;
-          font-size:${size * 0.45}px;
-          border:3px solid white;
-          box-shadow:0 4px 16px ${color}88;
-        ">${emoji}</div>
+        <div style="position:absolute;inset:-7px;border-radius:50%;background:${color};animation:ping 2s cubic-bezier(0,0,0.2,1) infinite;opacity:0.18;"></div>
+        ${inner}
       </div>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
@@ -93,7 +98,7 @@ export default function MapView({ myPosition, profile, nearbyUsers, focusPositio
 
         {/* My position */}
         {myPosition && (
-          <Marker position={[myPosition.lat, myPosition.lng]} icon={makeUserIcon(profile.color, profile.emoji)}>
+          <Marker position={[myPosition.lat, myPosition.lng]} icon={makeUserIcon(profile.color, profile.emoji, profile.photos?.[0])}>
             <Popup>
               <div style={{ fontFamily: 'Inter,sans-serif', padding: '2px 0' }}>
                 <strong style={{ color: profile.color }}>Moi — {profile.username}</strong>
@@ -107,7 +112,7 @@ export default function MapView({ myPosition, profile, nearbyUsers, focusPositio
 
         {/* Nearby users */}
         {nearbyUsers.map(u => (
-          <Marker key={u.id} position={[u.position.lat, u.position.lng]} icon={makeIcon(u.color, u.emoji)}>
+          <Marker key={u.id} position={[u.position.lat, u.position.lng]} icon={makeIcon(u.color, u.emoji, u.photos?.[0])}>
             <Popup>
               <div style={{ fontFamily: 'Inter,sans-serif', padding: '4px 0', minWidth: 160 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>

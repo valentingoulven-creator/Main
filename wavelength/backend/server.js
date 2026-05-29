@@ -37,7 +37,7 @@ function offsetCoords(lat, lng, dN, dE) {
 const MOCK_DATA = [
   {
     username: 'Sophie',  color: '#8b5cf6', emoji: '🎵',
-    bio: 'Passionnée de musique électro et de festivals 🎪', address: 'Paris 75010',
+    bio: 'Passionnée de musique électro et de festivals 🎪', address: 'Paris 75010', birthDate: '2000-03-15',
     interests: ['Électro 🥁', 'Festivals 🎪', 'Danse 💃', 'Art 🎨'],
     connectedApps: { spotify: 'https://open.spotify.com/user/sophie_demo', deezer: 'sophie_melo' },
     track: { title: 'Blinding Lights', artist: 'The Weeknd', source: 'spotify', url: 'https://open.spotify.com/track/0VjIjW4GlUZAMYd2vXMi3b' },
@@ -45,7 +45,7 @@ const MOCK_DATA = [
   },
   {
     username: 'Alex',    color: '#ec4899', emoji: '🎸',
-    bio: 'Guitariste amateur, je joue du rock depuis 10 ans 🎸', address: 'Lyon 69001',
+    bio: 'Guitariste amateur, je joue du rock depuis 10 ans 🎸', address: 'Lyon 69001', birthDate: '1997-07-22',
     interests: ['Rock 🎸', 'Concerts 🎤', 'Gaming 🎮', 'Cinéma 🎬'],
     connectedApps: { youtube: '@alex_guitar_lyon', youtubemusic: '@alex_guitar_lyon' },
     track: { title: 'Levitating', artist: 'Dua Lipa', source: 'spotify', url: 'https://open.spotify.com/track/463CkQjx2Zk1yXoBuierM9' },
@@ -53,7 +53,7 @@ const MOCK_DATA = [
   },
   {
     username: 'Léa',     color: '#3b82f6', emoji: '🎹',
-    bio: 'Pianiste classique qui découvre le jazz ✨', address: 'Bordeaux 33000',
+    bio: 'Pianiste classique qui découvre le jazz ✨', address: 'Bordeaux 33000', birthDate: '2001-11-08',
     interests: ['Classique 🎻', 'Jazz 🎷', 'Lecture 📚', 'Voyages ✈️'],
     connectedApps: { spotify: 'lea_piano', deezer: 'lea_classique' },
     track: { title: 'As It Was', artist: 'Harry Styles', source: 'spotify', url: 'https://open.spotify.com/track/4Dvkj6JhhA12EX05fT7y2e' },
@@ -171,6 +171,7 @@ function getPublicUser(user) {
     color: user.color,
     emoji: user.emoji,
     bio: user.bio ?? '',
+    birthDate: user.birthDate ?? null,
     interests: user.interests ?? [],
     photos: user.photos ?? [],
     address: user.address ?? '',
@@ -221,6 +222,7 @@ io.on('connection', (socket) => {
       color: data.color ?? '#8b5cf6',
       emoji: data.emoji ?? '🎵',
       bio: data.bio ?? '',
+      birthDate: data.birthDate ?? null,
       interests: data.interests ?? [],
       photos: data.photos ?? [],
       address: data.address ?? '',
@@ -260,6 +262,7 @@ io.on('connection', (socket) => {
     const u = connectedUsers.get(socket.id);
     if (!u) return;
     if (data.bio           !== undefined) u.bio           = data.bio;
+    if (data.birthDate     !== undefined) u.birthDate     = data.birthDate;
     if (data.interests     !== undefined) u.interests     = data.interests;
     if (data.photos        !== undefined) u.photos        = data.photos;
     if (data.jamUrl        !== undefined) u.jamUrl        = data.jamUrl;

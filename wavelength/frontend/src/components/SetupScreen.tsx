@@ -1,5 +1,7 @@
 import { useState, useRef } from 'react';
-import { ArrowRight, ArrowLeft, Music2, Camera, X, MapPin } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Camera, X, MapPin, Cake } from 'lucide-react';
+import { MeloSongLockup } from './MeloSongLogo';
+import { maxBirthDate, minBirthDate } from '../utils/ageUtils';
 import type { UserProfile, ConnectedApps } from '../types';
 import { compressImage } from '../utils/imageUtils';
 import { PLATFORMS } from './SourceLogo';
@@ -21,6 +23,7 @@ export default function SetupScreen({ onComplete }: Props) {
   const [color, setColor]       = useState(COLORS[0]);
   const [emoji, setEmoji]       = useState(EMOJIS[0]);
   const [bio, setBio]           = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const [address, setAddress]   = useState('');
   const [interests, setInterests]     = useState<string[]>([]);
   const [photos, setPhotos]           = useState<string[]>([]);
@@ -47,6 +50,7 @@ export default function SetupScreen({ onComplete }: Props) {
     onComplete({
       username: username.trim(), color, emoji,
       bio: bio.trim() || undefined,
+      birthDate: birthDate || undefined,
       address: address.trim() || undefined,
       interests: interests.length ? interests : undefined,
       photos: photos.filter(Boolean).length ? photos.filter(Boolean) : undefined,
@@ -66,11 +70,7 @@ export default function SetupScreen({ onComplete }: Props) {
       <div className="glass-strong rounded-3xl p-7 w-full max-w-sm animate-pop-in relative z-10">
         {/* Logo */}
         <div className="flex flex-col items-center mb-5">
-          <div className="w-12 h-12 rounded-2xl mb-2.5 flex items-center justify-center shadow-lg"
-            style={{ background: 'linear-gradient(135deg, #8b5cf6, #ec4899)' }}>
-            <Music2 className="w-6 h-6 text-white" />
-          </div>
-          <h1 className="text-3xl font-black tracking-tight gradient-text">MeloSong</h1>
+          <MeloSongLockup markSize={30} textSize="text-3xl" className="mb-1" />
           <p className="text-xs text-white/40 mt-1">Découvre la musique autour de toi</p>
         </div>
 
@@ -172,6 +172,23 @@ export default function SetupScreen({ onComplete }: Props) {
               <input className="wl-input w-full rounded-xl px-4 py-2.5 text-sm"
                 placeholder="ex: Paris 75010, Lyon…"
                 value={address} onChange={e => setAddress(e.target.value)} />
+            </div>
+
+            {/* Birth date */}
+            <div className="mb-4">
+              <label className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <Cake className="w-3.5 h-3.5" /> Date de naissance
+                <span className="text-white/20 normal-case font-normal">(optionnel)</span>
+              </label>
+              <input
+                type="date"
+                className="wl-input w-full rounded-xl px-4 py-2.5 text-sm"
+                value={birthDate}
+                onChange={e => setBirthDate(e.target.value)}
+                max={maxBirthDate()}
+                min={minBirthDate()}
+                style={{ colorScheme: 'dark' }}
+              />
             </div>
 
             {/* Bio */}

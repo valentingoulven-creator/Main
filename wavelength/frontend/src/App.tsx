@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Wifi, WifiOff, Navigation, AlertCircle, Loader2, UserCircle2 } from 'lucide-react';
+import { MeloSongLockup, MeloSongMark } from './components/MeloSongLogo';
 import SetupScreen from './components/SetupScreen';
 import NowPlaying from './components/NowPlaying';
 import TrackInput from './components/TrackInput';
@@ -218,13 +219,8 @@ export default function App() {
         {/* Header */}
         <header className="flex-shrink-0">
           {/* App wordmark */}
-          <div className="flex items-center justify-center gap-2.5 px-4 pt-4 pb-2">
-            <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md"
-              style={{ background: 'linear-gradient(135deg, #8b5cf6, #ec4899)' }}>
-              <span className="text-white font-black text-sm leading-none">M</span>
-            </div>
-            <span className="text-xl font-black tracking-tight gradient-text">MeloSong</span>
-            <span className="text-xs text-white/25 ml-auto font-medium hidden lg:block">Découvre la musique autour de toi</span>
+          <div className="flex items-center justify-center px-4 pt-4 pb-2">
+            <MeloSongLockup markSize={22} textSize="text-xl" />
           </div>
           {/* User row */}
           <div className="flex items-center gap-2 px-4 pb-3"
@@ -242,7 +238,7 @@ export default function App() {
 
           <div className="flex-1 min-w-0">
             <div className="text-sm font-bold text-white leading-none truncate">{profile.username}</div>
-            <div className="text-xs font-semibold leading-none mt-0.5 gradient-text">MeloSong</div>
+            <div className="text-xs leading-none mt-0.5 text-white/30">membre MeloSong</div>
           </div>
 
           {/* Chat status */}
@@ -328,10 +324,10 @@ export default function App() {
           <MapView myPosition={geo.position} profile={profile} nearbyUsers={socket.nearbyUsers} focusPosition={focusPosition} />
         ) : (
           <div className="h-full flex flex-col items-center justify-center gap-4 text-center px-8">
-            <div className="text-6xl mb-3">🎵</div>
-            <div className="text-4xl font-black tracking-tight gradient-text mb-1">MeloSong</div>
+            <MeloSongMark size={72} color="rgba(139,92,246,0.6)" className="mb-3" />
+            <MeloSongLockup markSize={30} textSize="text-4xl" className="mb-2" />
             <p className="text-sm text-white/40 font-medium">Découvre la musique autour de toi</p>
-            <p className="text-xs text-white/25 max-w-xs mt-1">Active la géolocalisation pour voir les auditeurs à proximité</p>
+            <p className="text-xs text-white/25 max-w-xs mt-1 text-center">Active la géolocalisation pour voir les auditeurs à proximité</p>
             {!geo.loading && !geo.error && (
               <button onClick={geo.request}
                 className="flex items-center gap-2 py-3 px-6 rounded-2xl font-semibold text-sm text-white transition-all active:scale-95 shadow-lg hover:opacity-90"
@@ -344,8 +340,8 @@ export default function App() {
         )}
 
         {/* MeloSong watermark on map */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[500] pointer-events-none select-none">
-          <span className="text-lg font-black tracking-tight gradient-text opacity-60">MeloSong</span>
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[500] pointer-events-none select-none opacity-50">
+          <MeloSongLockup markSize={16} textSize="text-sm" />
         </div>
 
         {/* Listener count */}

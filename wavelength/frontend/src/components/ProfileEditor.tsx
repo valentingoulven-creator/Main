@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
-import { X, Camera, Save, MapPin, Link2 } from 'lucide-react';
+import { X, Camera, Save, MapPin, Link2, Cake } from 'lucide-react';
+import { maxBirthDate, minBirthDate } from '../utils/ageUtils';
 import type { UserProfile, ConnectedApps } from '../types';
 import { compressImage } from '../utils/imageUtils';
 import { PLATFORMS, SpotifyLogo } from './SourceLogo';
@@ -24,6 +25,7 @@ export default function ProfileEditor({ profile, jamUrl: initJamUrl, onSave, onC
   const [color, setColor]             = useState(profile.color);
   const [emoji, setEmoji]             = useState(profile.emoji);
   const [bio, setBio]                 = useState(profile.bio ?? '');
+  const [birthDate, setBirthDate]     = useState(profile.birthDate ?? '');
   const [address, setAddress]         = useState(profile.address ?? '');
   const [interests, setInterests]     = useState<string[]>(profile.interests ?? []);
   const [photos, setPhotos]           = useState<string[]>(profile.photos ?? []);
@@ -53,7 +55,7 @@ export default function ProfileEditor({ profile, jamUrl: initJamUrl, onSave, onC
   }
 
   function handleSave() {
-    onSave({ color, emoji, bio: bio.trim() || undefined, address: address.trim() || undefined,
+    onSave({ color, emoji, bio: bio.trim() || undefined, birthDate: birthDate || undefined, address: address.trim() || undefined,
       interests: interests.length ? interests : undefined, photos: photos.length ? photos : undefined,
       connectedApps: Object.keys(connectedApps).length ? connectedApps : undefined,
       jamUrl: jamUrl.trim() || undefined });
@@ -130,6 +132,19 @@ export default function ProfileEditor({ profile, jamUrl: initJamUrl, onSave, onC
           </label>
           <input className="wl-input w-full rounded-xl px-3 py-2.5 text-sm"
             placeholder="Paris 75010, Lyon…" value={address} onChange={e => setAddress(e.target.value)} />
+        </div>
+
+        {/* Birth date */}
+        <div className="mb-3">
+          <label className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+            <Cake className="w-3 h-3" /> Date de naissance
+          </label>
+          <input type="date"
+            className="wl-input w-full rounded-xl px-3 py-2.5 text-sm"
+            value={birthDate} onChange={e => setBirthDate(e.target.value)}
+            max={maxBirthDate()} min={minBirthDate()}
+            style={{ colorScheme: 'dark' }}
+          />
         </div>
 
         {/* Bio */}

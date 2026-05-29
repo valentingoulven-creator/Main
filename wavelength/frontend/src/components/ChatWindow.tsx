@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Send, Loader2, Minus } from 'lucide-react';
-import type { ChatConversation, ChatMessage } from '../types';
+import type { ChatConversation, ChatMessage, NearbyUser } from '../types';
 
 interface Props {
   conv: ChatConversation;
@@ -86,10 +86,15 @@ export default function ChatWindow({ conv, onSend, onClose, onMinimize, myColor,
         onClick={handleMin}
       >
         <div className="relative flex-shrink-0">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-base"
-            style={{ background: conv.peer.color }}>
-            {conv.peer.emoji}
-          </div>
+          {(conv.peer as NearbyUser & { photos?: string[] }).photos?.[0] ? (
+            <img src={(conv.peer as NearbyUser & { photos?: string[] }).photos![0]}
+              className="w-8 h-8 rounded-full object-cover" />
+          ) : (
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-base"
+              style={{ background: conv.peer.color }}>
+              {conv.peer.emoji}
+            </div>
+          )}
           {conv.state === 'active' && (
             <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2"
               style={{ background: '#10b981', borderColor: '#12121f' }} />
