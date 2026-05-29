@@ -35,8 +35,9 @@ function offsetCoords(lat, lng, dN, dE) {
 // ─── Mock users ───────────────────────────────────────────────────────────────
 
 const MOCK_DATA = [
+  // ── Très proches (< 200 m) ─────────────────────────────────────────────────
   {
-    username: 'Sophie',  color: '#8b5cf6', emoji: '🎵',
+    username: 'Sophie',  color: '#8b5cf6', emoji: '🎵', dist: 80, angle: 0.4,
     bio: 'Passionnée de musique électro et de festivals 🎪', address: 'Paris 75010', birthDate: '2000-03-15',
     interests: ['Électro 🥁', 'Festivals 🎪', 'Danse 💃', 'Art 🎨'],
     connectedApps: { spotify: 'https://open.spotify.com/user/sophie_demo', deezer: 'sophie_melo' },
@@ -44,59 +45,162 @@ const MOCK_DATA = [
     jamUrl: 'https://open.spotify.com/jam/demo-sophie',
   },
   {
-    username: 'Alex',    color: '#ec4899', emoji: '🎸',
-    bio: 'Guitariste amateur, je joue du rock depuis 10 ans 🎸', address: 'Lyon 69001', birthDate: '1997-07-22',
+    username: 'Camille', color: '#a855f7', emoji: '🎶', dist: 120, angle: 1.8,
+    bio: 'Chanteuse de chorale le dimanche, indie pop en semaine 🎙️', address: 'Paris 75009', birthDate: '2003-06-21',
+    interests: ['Pop 🎵', 'Indie 🌿', 'Art 🎨', 'Voyages ✈️'],
+    connectedApps: { spotify: 'camille_chant', deezer: 'camille_indie' },
+    track: { title: 'good 4 u', artist: 'Olivia Rodrigo', source: 'spotify', url: 'https://open.spotify.com/track/4ZtFanR9U6ndgddUvNcjcG' },
+    jamUrl: null,
+  },
+  {
+    username: 'Nico',    color: '#0ea5e9', emoji: '🎧', dist: 160, angle: 3.2,
+    bio: 'Beatmaker parisien, j\'envoie des tracks gratuitement 🎚️', address: 'Paris 75018', birthDate: '1999-09-14',
+    interests: ['Hip-Hop 🎤', 'Électro 🥁', 'Gaming 🎮', 'Tech 💻'],
+    connectedApps: { youtube: '@nico_beats_paris', youtubemusic: '@nico_beats_paris', spotify: 'nico_prod' },
+    track: { title: 'HUMBLE.', artist: 'Kendrick Lamar', source: 'spotify', url: 'https://open.spotify.com/track/7KXjTSCq5nL1LoYtL7XAwS' },
+    jamUrl: 'https://open.spotify.com/jam/demo-nico',
+  },
+
+  // ── Proches (200 m – 800 m) ────────────────────────────────────────────────
+  {
+    username: 'Alex',    color: '#ec4899', emoji: '🎸', dist: 280, angle: 0.9,
+    bio: 'Guitariste amateur, je joue du rock depuis 10 ans 🎸', address: 'Paris 75001', birthDate: '1997-07-22',
     interests: ['Rock 🎸', 'Concerts 🎤', 'Gaming 🎮', 'Cinéma 🎬'],
-    connectedApps: { youtube: '@alex_guitar_lyon', youtubemusic: '@alex_guitar_lyon' },
+    connectedApps: { youtube: '@alex_guitar', youtubemusic: '@alex_guitar' },
     track: { title: 'Levitating', artist: 'Dua Lipa', source: 'spotify', url: 'https://open.spotify.com/track/463CkQjx2Zk1yXoBuierM9' },
     jamUrl: null,
   },
   {
-    username: 'Léa',     color: '#3b82f6', emoji: '🎹',
-    bio: 'Pianiste classique qui découvre le jazz ✨', address: 'Bordeaux 33000', birthDate: '2001-11-08',
+    username: 'Inès',    color: '#f43f5e', emoji: '🎤', dist: 350, angle: 2.1,
+    bio: 'Passionnée de K-Pop et de J-Pop depuis toujours ✨', address: 'Paris 75011', birthDate: '2002-02-28',
+    interests: ['K-Pop ✨', 'Danse 💃', 'Mode 👗', 'Cinéma 🎬'],
+    connectedApps: { youtubemusic: '@ines_kpop', deezer: 'ines_kpop_fr' },
+    track: { title: 'Dynamite', artist: 'BTS', source: 'youtube', url: 'https://www.youtube.com/watch?v=gdZLi9oWNZg' },
+    jamUrl: null,
+  },
+  {
+    username: 'Léa',     color: '#3b82f6', emoji: '🎹', dist: 420, angle: 4.5,
+    bio: 'Pianiste classique qui découvre le jazz ✨', address: 'Paris 75005', birthDate: '2001-11-08',
     interests: ['Classique 🎻', 'Jazz 🎷', 'Lecture 📚', 'Voyages ✈️'],
     connectedApps: { spotify: 'lea_piano', deezer: 'lea_classique' },
     track: { title: 'As It Was', artist: 'Harry Styles', source: 'spotify', url: 'https://open.spotify.com/track/4Dvkj6JhhA12EX05fT7y2e' },
     jamUrl: null,
   },
   {
-    username: 'Noah',    color: '#10b981', emoji: '🎤',
-    bio: 'Fan de rap et de battles freestyle 🔥', address: 'Marseille 13001',
+    username: 'Rayan',   color: '#22c55e', emoji: '🥁', dist: 550, angle: 5.5,
+    bio: 'Batteur de metal, doux dans la vie 😄', address: 'Paris 75013', birthDate: '1998-04-03',
+    interests: ['Metal 🔊', 'Rock 🎸', 'Sport 🏃', 'Gaming 🎮'],
+    connectedApps: { youtube: '@rayan_drums_metal', spotify: 'rayan_metal' },
+    track: { title: 'Master of Puppets', artist: 'Metallica', source: 'youtube', url: 'https://www.youtube.com/watch?v=xopkKOyNm5Q' },
+    jamUrl: null,
+  },
+  {
+    username: 'Emma',    color: '#f59e0b', emoji: '🥁', dist: 650, angle: 1.2,
+    bio: 'Batteuse et fan de Queen depuis toujours 👑', address: 'Paris 75014', birthDate: '1996-08-17',
+    interests: ['Rock 🎸', 'Metal 🔊', 'Gastronomie 🍕', 'Nature 🌿'],
+    connectedApps: { youtube: '@emma_drums', deezer: 'emma_queen_fan' },
+    track: { title: 'Bohemian Rhapsody', artist: 'Queen', source: 'youtube', url: 'https://www.youtube.com/watch?v=fJ9rUzIMcZQ' },
+    jamUrl: null,
+  },
+
+  // ── Moyens (800 m – 2 km) ─────────────────────────────────────────────────
+  {
+    username: 'Noah',    color: '#10b981', emoji: '🎤', dist: 900, angle: 3.8,
+    bio: 'Fan de rap et de battles freestyle 🔥', address: 'Paris 75019', birthDate: '2000-12-05',
     interests: ['Hip-Hop 🎤', 'Sport 🏃', 'Mode 👗', 'Tech 💻'],
     connectedApps: { spotify: 'noah_hiphop', youtube: '@noah_freestyle' },
     track: { title: 'Bad Guy', artist: 'Billie Eilish', source: 'spotify', url: 'https://open.spotify.com/track/2Fxmhks0live4K2e4x4b6p' },
     jamUrl: 'https://open.spotify.com/jam/demo-noah',
   },
   {
-    username: 'Emma',    color: '#f59e0b', emoji: '🥁',
-    bio: 'Batteuse et fan de Queen depuis toujours 👑', address: 'Toulouse 31000',
-    interests: ['Rock 🎸', 'Metal 🔊', 'Gastronomie 🍕', 'Nature 🌿'],
-    connectedApps: { youtube: '@emma_drums', deezer: 'emma_queen_fan' },
-    track: { title: 'Bohemian Rhapsody', artist: 'Queen', source: 'youtube', url: 'https://www.youtube.com/watch?v=fJ9rUzIMcZQ' },
-    jamUrl: null,
-  },
-  {
-    username: 'Lucas',   color: '#06b6d4', emoji: '🎧',
-    bio: 'DJ amateur en soirée, producteur le week-end 🎚️', address: 'Nantes 44000',
+    username: 'Lucas',   color: '#06b6d4', emoji: '🎧', dist: 1100, angle: 0.2,
+    bio: 'DJ amateur en soirée, producteur le week-end 🎚️', address: 'Paris 75020', birthDate: '1995-05-30',
     interests: ['Électro 🥁', 'R&B 🎶', 'Photo 📷', 'Voyages ✈️'],
-    connectedApps: { spotify: 'lucas_dj_nantes', deezer: 'lucas_dj', youtubemusic: '@lucas_beats' },
+    connectedApps: { spotify: 'lucas_dj', deezer: 'lucas_dj', youtubemusic: '@lucas_beats' },
     track: { title: 'Stay', artist: 'The Kid LAROI', source: 'spotify', url: 'https://open.spotify.com/track/5HCyWlXZPP0y6Gqq8TgA20' },
     jamUrl: 'https://open.spotify.com/jam/demo-lucas',
   },
   {
-    username: 'Manon',   color: '#f97316', emoji: '🎻',
-    bio: 'Violoniste de formation, ouverte à tous les genres 🎶', address: 'Strasbourg 67000',
+    username: 'Jade',    color: '#d946ef', emoji: '🎻', dist: 1300, angle: 2.7,
+    bio: 'Violoniste, amoureuse de la folk et des grands espaces 🌿', address: 'Paris 75015', birthDate: '2004-01-19',
+    interests: ['Folk 🌿', 'Classique 🎻', 'Nature 🌿', 'Lecture 📚'],
+    connectedApps: { spotify: 'jade_violin_folk', deezer: 'jade_violon' },
+    track: { title: 'Tennessee Whiskey', artist: 'Chris Stapleton', source: 'spotify', url: null },
+    jamUrl: null,
+  },
+  {
+    username: 'Karim',   color: '#f97316', emoji: '🎷', dist: 1600, angle: 5.0,
+    bio: 'Saxophoniste de rue, jazz manouche et soul 🌙', address: 'Paris 75006', birthDate: '1993-10-11',
+    interests: ['Jazz 🎷', 'Soul 🎶', 'Gastronomie 🍕', 'Cinéma 🎬'],
+    connectedApps: { youtube: '@karim_sax_paris', youtubemusic: '@karim_sax_paris' },
+    track: { title: 'What a Wonderful World', artist: 'Louis Armstrong', source: 'youtube', url: 'https://www.youtube.com/watch?v=A3yCcXgbKrE' },
+    jamUrl: null,
+  },
+  {
+    username: 'Chloé',   color: '#84cc16', emoji: '🎙️', dist: 1800, angle: 3.5,
+    bio: 'Podcaster musicale, je parle de sons rares 🎙️', address: 'Paris 75007', birthDate: '1998-07-07',
+    interests: ['Pop 🎵', 'R&B 🎶', 'Tech 💻', 'Voyages ✈️'],
+    connectedApps: { spotify: 'chloe_podcast_music', deezer: 'chloe_sounds' },
+    track: { title: 'Espresso', artist: 'Sabrina Carpenter', source: 'spotify', url: 'https://open.spotify.com/track/2qSkIjg1o9h3YT9RAgYN75' },
+    jamUrl: null,
+  },
+
+  // ── Plus loin (2 km – 4 km) ───────────────────────────────────────────────
+  {
+    username: 'Manon',   color: '#f97316', emoji: '🎻', dist: 2300, angle: 1.5,
+    bio: 'Violoniste de formation, ouverte à tous les genres 🎶', address: 'Paris 75016', birthDate: '2002-03-25',
     interests: ['Classique 🎻', 'Folk 🌿', 'Danse 💃', 'Art 🎨'],
     connectedApps: { spotify: 'manon_violon', deezer: 'manon_classique' },
     track: { title: 'Montero', artist: 'Lil Nas X', source: 'spotify', url: null },
     jamUrl: null,
   },
   {
-    username: 'Thomas',  color: '#ef4444', emoji: '🎷',
-    bio: 'Saxophoniste de jazz, je joue dans les rues le soir 🌙', address: 'Nice 06000',
+    username: 'Thomas',  color: '#ef4444', emoji: '🎷', dist: 2800, angle: 4.2,
+    bio: 'Saxophoniste de jazz, je joue dans les rues le soir 🌙', address: 'Paris 75003', birthDate: '1991-12-30',
     interests: ['Jazz 🎷', 'R&B 🎶', 'Cinéma 🎬', 'Gastronomie 🍕'],
-    connectedApps: { youtube: '@thomas_sax_nice', youtubemusic: '@thomas_sax_nice' },
+    connectedApps: { youtube: '@thomas_sax', youtubemusic: '@thomas_sax' },
     track: { title: 'Starboy', artist: 'The Weeknd & Daft Punk', source: 'spotify', url: null },
+    jamUrl: null,
+  },
+  {
+    username: 'Yasmine', color: '#e879f9', emoji: '🎼', dist: 3200, angle: 0.7,
+    bio: 'Compositrice en herbe, musique de film en tête 🎬', address: 'Paris 75002', birthDate: '2000-09-09',
+    interests: ['Classique 🎻', 'Cinéma 🎬', 'Art 🎨', 'Lecture 📚'],
+    connectedApps: { spotify: 'yasmine_compose', deezer: 'yasmine_films' },
+    track: { title: 'Experience', artist: 'Ludovico Einaudi', source: 'youtube', url: 'https://www.youtube.com/watch?v=hN_q-_nGv4U' },
+    jamUrl: null,
+  },
+  {
+    username: 'Baptiste', color: '#38bdf8', emoji: '🎚️', dist: 3700, angle: 2.5,
+    bio: 'Sound engineer, j\'adore les sons qui claquent fort 🔊', address: 'Paris 75017', birthDate: '1994-03-18',
+    interests: ['Électro 🥁', 'House 🎚️', 'Tech 💻', 'Photo 📷'],
+    connectedApps: { spotify: 'baptiste_sound', youtubemusic: '@baptiste_mix', deezer: 'baptiste_edm' },
+    track: { title: 'One More Time', artist: 'Daft Punk', source: 'spotify', url: null },
+    jamUrl: 'https://open.spotify.com/jam/demo-baptiste',
+  },
+  {
+    username: 'Zoé',     color: '#fb7185', emoji: '🎤', dist: 4200, angle: 5.8,
+    bio: 'Chanteuse de variété française, Brel dans le cœur ❤️', address: 'Paris 75008', birthDate: '1997-11-02',
+    interests: ['Pop 🎵', 'Folk 🌿', 'Concerts 🎤', 'Gastronomie 🍕'],
+    connectedApps: { deezer: 'zoe_variet_fr', spotify: 'zoe_chanson' },
+    track: { title: 'Ne me quitte pas', artist: 'Jacques Brel', source: 'youtube', url: 'https://www.youtube.com/watch?v=mPJRbQRFSEc' },
+    jamUrl: null,
+  },
+  // ── Aucun morceau en cours (idle) ─────────────────────────────────────────
+  {
+    username: 'Marc',    color: '#64748b', emoji: '🎵', dist: 200, angle: 2.9,
+    bio: 'Mélomane curieux, ouvert à tout 🎵', address: 'Paris 75012', birthDate: '1990-06-15',
+    interests: ['Pop 🎵', 'Jazz 🎷', 'Cinéma 🎬', 'Sport 🏃'],
+    connectedApps: { deezer: 'marc_paris' },
+    track: null,
+    jamUrl: null,
+  },
+  {
+    username: 'Élisa',   color: '#94a3b8', emoji: '🎹', dist: 480, angle: 4.0,
+    bio: 'En pause musicale, mais toujours là 😴', address: 'Paris 75004', birthDate: '2005-08-22',
+    interests: ['Pop 🎵', 'K-Pop ✨', 'Mode 👗', 'Art 🎨'],
+    connectedApps: { spotify: 'elisa_pop', youtubemusic: '@elisa_music' },
+    track: null,
     jamUrl: null,
   },
 ];
@@ -135,9 +239,9 @@ let mockInitialized = false;
 function initMockUsers(lat, lng) {
   if (mockInitialized) return;
   mockInitialized = true;
-  mockUsers = MOCK_DATA.map((data, i) => {
-    const angle = (i / MOCK_DATA.length) * 2 * Math.PI;
-    const dist = 150 + i * 180;
+  mockUsers = MOCK_DATA.map((data) => {
+    const dist = data.dist ?? 300;
+    const angle = data.angle ?? Math.random() * 2 * Math.PI;
     const pos = offsetCoords(lat, lng, dist * Math.cos(angle), dist * Math.sin(angle));
     return {
       id: `mock-${i}`,
