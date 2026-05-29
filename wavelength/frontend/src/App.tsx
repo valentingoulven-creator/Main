@@ -20,6 +20,8 @@ import type { MapStyleDef } from './components/MapStyleBar';
 import CameraCapture from './components/CameraCapture';
 import { DonateUser, DonateApp } from './components/DonateModal';
 import LiveBroadcast from './components/LiveBroadcast';
+import LiveSetupModal from './components/LiveSetupModal';
+import type { LiveVisibility } from './components/LiveSetupModal';
 import LiveViewer from './components/LiveViewer';
 import DiscoverTab from './components/DiscoverTab';
 import SpotifyConnect from './components/SpotifyConnect';
@@ -67,7 +69,9 @@ export default function App() {
   const [showDonateApp, setShowDonateApp]         = useState(false);
   const [showSpotifyConnect, setShowSpotifyConnect] = useState(false);
   const [spotifyLinked, setSpotifyLinked]           = useState(spotifyConnected);
+  const [showLiveSetup, setShowLiveSetup]         = useState(false);
   const [showLiveBroadcast, setShowLiveBroadcast] = useState(false);
+  const [liveSetupData, setLiveSetupData]         = useState<{ title: string; visibility: LiveVisibility } | null>(null);
   const [watchingLive, setWatchingLive]           = useState<NearbyUser | PublicLive | null>(null);
   const [amLive, setAmLive]                       = useState(false);
   const [liveViewers, setLiveViewers]             = useState(0);
@@ -403,7 +407,7 @@ export default function App() {
           <div className="text-xs font-semibold text-white/30 uppercase tracking-wider mb-2">J'écoute en ce moment</div>
           <NowPlaying profile={profile} track={myTrack} jamUrl={myJamUrl} onEdit={() => setShowTrackInput(true)} />
           {/* Go Live button */}
-          <button onClick={() => setShowLiveBroadcast(true)}
+          <button onClick={() => amLive ? setShowLiveBroadcast(true) : setShowLiveSetup(true)}
             className="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold text-white transition-all active:scale-95 hover:opacity-90"
             style={amLive
               ? { background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', color: '#ef4444' }
@@ -556,7 +560,7 @@ export default function App() {
 
           {/* Main FAB */}
           <button
-            onClick={() => setShowLiveBroadcast(true)}
+            onClick={() => amLive ? setShowLiveBroadcast(true) : setShowLiveSetup(true)}
             className="flex items-center gap-2.5 transition-all active:scale-95 hover:scale-105 shadow-2xl"
             style={{
               background: amLive
@@ -640,13 +644,28 @@ export default function App() {
         />
       )}
 
+      {/* Live setup popup */}
+      {showLiveSetup && !showLiveBroadcast && (
+        <LiveSetupModal
+          broadcasterId={socket.connected ? 'my-live' : 'preview'}
+          accentColor={profile.color}
+          onClose={() => setShowLiveSetup(false)}
+          onStart={(title, visibility) => {
+            setLiveSetupData({ title, visibility });
+            setShowLiveSetup(false);
+            setShowLiveBroadcast(true);
+          }}
+        />
+      )}
+
       {/* Live broadcast */}
       {showLiveBroadcast && (
         <LiveBroadcast
           profile={profile}
           viewers={liveViewers}
-          isLive={amLive}
-          onStartLive={(title, isPublic) => { socket.startLive(title, isPublic); setAmLive(true); }}
+          initialTitle={liveSetupData?.title}
+          initialVisibility={liveSetupData?.visibility}
+          onStartLive={(title, visibility) => { socket.startLive(title, visibility === 'public'); setAmLive(true); }}
           onUpdateLive={(title, isPublic) => socket.updateLive(title, isPublic)}
           onStopLive={() => { socket.stopLive(); setAmLive(false); setLiveViewers(0); setShowLiveBroadcast(false); }}
           onSendOffer={socket.sendOffer}
