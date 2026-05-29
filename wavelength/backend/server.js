@@ -381,6 +381,7 @@ function getPublicUser(user) {
     track: user.track,
     jamUrl: user.jamUrl ?? null,
     chatStatus: user.chatStatus ?? 'available',
+    ytSession:   user.ytSession  ?? null,
     isLive:      user.isLive     ?? false,
     liveTitle:   user.liveTitle  ?? null,
     liveStart:   user.liveStart  ?? null,
@@ -670,6 +671,54 @@ io.on('connection', (socket) => {
 
   socket.on('get_public_lives', () => {
     socket.emit('public_lives', getPublicLives());
+  });
+
+  // ── YouTube Sessions ─────────────────────────────────────────────────────
+
+  socket.on('yt_session_create', ({ videoId, title, videoTitle }) => {
+    const u = connectedUsers.get(socket.id);
+    if (!u) return;
+    u.ytSession = { videoId, title: title || `Session de ${u.username}`, videoTitle, participants: 0, state: 'paused', currentTime: 0, startedAt: Date.now() };
+    socket.join(`ytsession:${socket.id}`);
+    pushAll();
+  });
+
+  socket.on('yt_session_end', () => {
+    const u = connectedUsers.get(socket.id);
+    if (!u) return;
+    u.ytSession = null;
+    io.to(`ytsession:${socket.id}`).emit('yt_session_ended', { hostId: socket.id });
+    io.socketsLeave(`ytsession:${socket.id}`);
+    pushAll();
+  });
+
+  socket.on('yt_session_join', ({ hostId }) => {
+    const host = connectedUsers.get(hostId);
+    if (!host?.ytSession) { socket.emit('yt_session_unavailable', { hostId }); return; }
+    socket.join(`ytsession:${hostId}`);
+    host.ytSession.participants = (host.ytSession.participants ?? 0) + 1;
+    pushAll();
+    // Send current state to new joiner
+    socket.emit('yt_session_state', { hostId, ...host.ytSession });
+  });
+
+  socket.on('yt_session_leave', ({ hostId }) => {
+    socket.leave(`ytsession:${hostId}`);
+    const host = connectedUsers.get(hostId);
+    if (host?.ytSession) host.ytSession.participants = Math.max(0, (host.ytSession.participants ?? 1) - 1);
+    pushAll();
+  });
+
+  // Host broadcasts playback state to all participants
+  socket.on('yt_session_sync', ({ state, currentTime }) => {
+    const u = connectedUsers.get(socket.id);
+    if (!u?.ytSession) return;
+    u.ytSession.state = state;
+    u.ytSession.currentTime = currentTime;
+    // Broadcast to all participants (not host)
+    socket.to(`ytsession:${socket.id}`).emit('yt_session_state', {
+      hostId: socket.id, videoId: u.ytSession.videoId, state, currentTime, ts: Date.now(),
+    });
   });
 
   // ── Live streaming (WebRTC signaling) ─────────────────────────────────────

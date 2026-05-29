@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { NearbyUser, Coordinates, UserProfile } from '../types';
+import { calcAge } from '../utils/ageUtils';
 
 function makeIcon(color: string, emoji: string, photo?: string, size = 40) {
   const inner = photo
@@ -117,37 +118,60 @@ export default function MapView({ myPosition, profile, nearbyUsers, focusPositio
         )}
 
         {/* Nearby users */}
-        {nearbyUsers.map(u => (
+        {nearbyUsers.map(u => {
+          const age = u.birthDate ? calcAge(u.birthDate) : null;
+          return (
           <Marker key={u.id} position={[u.position.lat, u.position.lng]} icon={makeIcon(u.color, u.emoji, u.photos?.[0])}>
             <Popup>
-              <div style={{ fontFamily: 'Inter,sans-serif', padding: '4px 0', minWidth: 160 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                  <div style={{
-                    width: 28, height: 28, borderRadius: '50%',
-                    background: u.color, display: 'flex', alignItems: 'center',
-                    justifyContent: 'center', fontSize: 14,
-                  }}>{u.emoji}</div>
-                  <strong style={{ color: '#fff' }}>{u.username}</strong>
+              <div style={{ fontFamily: 'Inter,sans-serif', padding: '4px 0', minWidth: 180, maxWidth: 220 }}>
+                {/* Avatar + name + age */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  {u.photos?.[0] ? (
+                    <img src={u.photos[0]} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${u.color}`, flexShrink: 0 }} />
+                  ) : (
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: u.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                      {u.emoji}
+                    </div>
+                  )}
+                  <div>
+                    <div style={{ color: '#fff', fontWeight: 800, fontSize: 14, lineHeight: 1.2 }}>{u.username}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                      {age !== null && (
+                        <span style={{ color: u.color, fontSize: 11, fontWeight: 700, background: u.color + '22', padding: '1px 6px', borderRadius: 6 }}>
+                          {age} ans
+                        </span>
+                      )}
+                      <span style={{ color: '#555', fontSize: 10 }}>{u.distance} m</span>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Bio */}
+                {u.bio && (
+                  <div style={{ color: '#aaa', fontSize: 11, marginBottom: 7, lineHeight: 1.4, borderLeft: `2px solid ${u.color}55`, paddingLeft: 7 }}>
+                    {u.bio.slice(0, 80)}{u.bio.length > 80 ? '…' : ''}
+                  </div>
+                )}
+
+                {/* Track */}
                 {u.track ? (
-                  <>
-                    <div style={{ color: '#ddd', fontSize: 12, fontWeight: 600 }}>{u.track.title}</div>
-                    {u.track.artist && <div style={{ color: '#888', fontSize: 11 }}>{u.track.artist}</div>}
+                  <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 8, padding: '6px 8px' }}>
+                    <div style={{ color: '#ddd', fontSize: 12, fontWeight: 700, marginBottom: 1 }}>{u.track.title}</div>
+                    {u.track.artist && <div style={{ color: '#888', fontSize: 10 }}>{u.track.artist}</div>}
                     {u.track.url && (
                       <a href={u.track.url} target="_blank" rel="noopener noreferrer"
-                        style={{ display: 'inline-block', marginTop: 6, fontSize: 11, color: '#8b5cf6' }}>
+                        style={{ display: 'inline-block', marginTop: 5, fontSize: 11, color: u.color, fontWeight: 600 }}>
                         Écouter →
                       </a>
                     )}
-                  </>
+                  </div>
                 ) : (
-                  <div style={{ color: '#666', fontSize: 11 }}>Rien en écoute</div>
+                  <div style={{ color: '#555', fontSize: 11 }}>Rien en écoute</div>
                 )}
-                <div style={{ color: '#555', fontSize: 10, marginTop: 4 }}>{u.distance} m</div>
               </div>
             </Popup>
           </Marker>
-        ))}
+        )})}
       </MapContainer>
     </div>
   );

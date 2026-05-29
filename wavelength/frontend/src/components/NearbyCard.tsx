@@ -7,6 +7,7 @@ interface Props {
   onClick: () => void;
   onChat: () => void;
   onWatchLive?: () => void;
+  onJoinYT?: () => void;
 }
 
 function formatDist(m: number) {
@@ -19,7 +20,7 @@ const STATUS_DOT: Record<string, string> = {
   dnd:       '#ef4444',
 };
 
-export default function NearbyCard({ user, onClick, onChat, onWatchLive }: Props) {
+export default function NearbyCard({ user, onClick, onChat, onWatchLive, onJoinYT }: Props) {
   const { track } = user;
   const canChat = user.chatStatus !== 'dnd';
   const statusDot = STATUS_DOT[user.chatStatus ?? 'available'];
@@ -145,6 +146,18 @@ export default function NearbyCard({ user, onClick, onChat, onWatchLive }: Props
               <Users className="w-3 h-3" />{user.viewers}
             </span>
           )}
+        </button>
+      )}
+
+      {/* YouTube session strip */}
+      {user.ytSession && onJoinYT && (
+        <button
+          onClick={e => { e.stopPropagation(); onJoinYT(); }}
+          className="flex items-center justify-center gap-2 py-2 w-full text-xs font-bold transition-all hover:opacity-90 active:scale-[0.99]"
+          style={{ background: 'linear-gradient(90deg, rgba(255,0,0,0.2), rgba(204,0,0,0.1))', borderTop: '1px solid rgba(255,0,0,0.2)', color: '#ff4444' }}>
+          <YouTubeLogo size={14} />
+          Rejoindre la session — {user.ytSession.title}
+          <span className="text-red-400/60 flex items-center gap-0.5"><Users className="w-3 h-3" />{user.ytSession.participants}</span>
         </button>
       )}
 

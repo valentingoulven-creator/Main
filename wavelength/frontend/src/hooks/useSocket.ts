@@ -83,6 +83,14 @@ export function useSocket() {
 
   // Ratings
   const sendRating  = useCallback((targetId: string, vibe: string, note: string, anonymous?: boolean) => socketRef.current?.emit('send_rating', { targetId, vibe, note, anonymous: anonymous ?? false }), []);
+
+  // YouTube Sessions
+  const ytCreateSession = useCallback((videoId: string, title: string, videoTitle: string) => socketRef.current?.emit('yt_session_create', { videoId, title, videoTitle }), []);
+  const ytEndSession    = useCallback(()                                                   => socketRef.current?.emit('yt_session_end'), []);
+  const ytJoinSession   = useCallback((hostId: string)                                    => socketRef.current?.emit('yt_session_join', { hostId }), []);
+  const ytLeaveSession  = useCallback((hostId: string)                                    => socketRef.current?.emit('yt_session_leave', { hostId }), []);
+  const ytSyncSession   = useCallback((state: string, currentTime: number)                => socketRef.current?.emit('yt_session_sync', { state, currentTime }), []);
+  const ytGetSessionId  = useCallback(()                                                   => socketRef.current?.id ?? null, []);
   const getRatings  = useCallback((targetId: string)                              => socketRef.current?.emit('get_ratings', { targetId }), []);
 
   // Live
@@ -96,6 +104,16 @@ export function useSocket() {
   const sendAnswer  = useCallback((to: string, answer: RTCSessionDescriptionInit)  => socketRef.current?.emit('live_answer',  { to, answer }), []);
   const sendIce     = useCallback((to: string, candidate: RTCIceCandidateInit)     => socketRef.current?.emit('live_ice',     { to, candidate }), []);
 
+  // YouTube session state listeners
+  const onYTSessionState  = useCallback((cb: (d: { hostId: string; videoId: string; state: string; currentTime: number }) => void) => {
+    socketRef.current?.on('yt_session_state', cb);
+    return () => { socketRef.current?.off('yt_session_state', cb); };
+  }, []);
+  const onYTSessionEnded  = useCallback((cb: (d: { hostId: string }) => void) => {
+    socketRef.current?.on('yt_session_ended', cb);
+    return () => { socketRef.current?.off('yt_session_ended', cb); };
+  }, []);
+
   return {
     nearbyUsers, publicLives, connected,
     join, updatePosition, updateTrack, updateRadius, updateChatStatus, updateProfile,
@@ -104,5 +122,7 @@ export function useSocket() {
     sendRating, getRatings,
     startLive, updateLive, stopLive, joinLive, leaveLive, sendOffer, sendAnswer, sendIce,
     getPublicLivesReq,
+    ytCreateSession, ytEndSession, ytJoinSession, ytLeaveSession, ytSyncSession, ytGetSessionId,
+    onYTSessionState, onYTSessionEnded,
   };
 }

@@ -11,6 +11,18 @@ export interface Track {
   url?: string;
 }
 
+// ─── YouTube Session ──────────────────────────────────────────────────────────
+
+export interface YTSession {
+  videoId: string;
+  title: string;
+  videoTitle?: string;
+  participants: number;
+  state: 'playing' | 'paused';
+  currentTime: number;
+  startedAt: number;
+}
+
 export type PlatformKey = 'spotify';
 export type ConnectedApps = Partial<Record<PlatformKey, string>>;
 
@@ -45,6 +57,7 @@ export interface NearbyUser {
   jamUrl?: string;
   address?: string;
   connectedApps?: ConnectedApps;
+  ytSession?: YTSession | null;
   isLive?: boolean;
   liveTitle?: string;
   liveStart?: number;

@@ -90,6 +90,26 @@ html, body, #root {
 }
 .leaflet-control-attribution a { color: rgba(255,255,255,0.5) !important; }
 
+/* Dark popup */
+.leaflet-popup-content-wrapper {
+  background: rgba(14,14,24,0.97) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+  color: #fff !important;
+  backdrop-filter: blur(12px) !important;
+}
+.leaflet-popup-tip {
+  background: rgba(14,14,24,0.97) !important;
+}
+.leaflet-popup-close-button {
+  color: rgba(255,255,255,0.4) !important;
+  font-size: 18px !important;
+  top: 8px !important;
+  right: 10px !important;
+}
+.leaflet-popup-close-button:hover { color: rgba(255,255,255,0.8) !important; }
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
