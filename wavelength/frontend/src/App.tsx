@@ -24,6 +24,7 @@ import LiveSetupModal from './components/LiveSetupModal';
 import type { LiveVisibility } from './components/LiveSetupModal';
 import LiveViewer from './components/LiveViewer';
 import DiscoverTab from './components/DiscoverTab';
+import LiveFeed from './components/LiveFeed';
 import SpotifyConnect from './components/SpotifyConnect';
 import YouTubeConnect from './components/YouTubeConnect';
 import EmailVerifyBanner, { VerifiedBadge } from './components/EmailVerifyBanner';
@@ -572,12 +573,22 @@ export default function App() {
         </div>
       </aside>
 
-      {/* ── Right panel: full map ─────────────────────────── */}
+      {/* ── Right panel: map or live feed ────────────────── */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Ad banner */}
-        <AdBanner />
+        {/* Ad banner — only on map view */}
+        {view !== 'discover' && <AdBanner />}
 
-        {/* Map or empty state */}
+        {/* Live feed (Découvrir) replaces map */}
+        {view === 'discover' ? (
+          <div className="flex-1 overflow-hidden">
+            <LiveFeed
+              lives={socket.publicLives}
+              onWatch={(live) => setWatchingLive(live as unknown as NearbyUser)}
+              onRefresh={socket.getPublicLivesReq}
+              accentColor={profile.color}
+            />
+          </div>
+        ) : (
         <div className="flex-1 relative overflow-hidden">
         {geo.position ? (
           <MapView myPosition={geo.position} profile={profile} nearbyUsers={socket.nearbyUsers} focusPosition={focusPosition}
@@ -673,7 +684,8 @@ export default function App() {
             <div className="text-2xl font-bold gradient-text">{socket.nearbyUsers.length}</div>
           </div>
         )}
-        </div>{/* end map wrapper */}
+        </div>
+        )}{/* end map wrapper + discover/map conditional */}
       </main>
 
       {/* ── Modals & overlays ─────────────────────────────── */}
