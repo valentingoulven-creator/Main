@@ -206,6 +206,30 @@ export default function ProfileEditor({ profile, jamUrl: initJamUrl, onSave, onC
           </div>
         </div>
 
+        {/* Spotify account link */}
+        <div className="mb-3 p-3 rounded-2xl"
+          style={{ background: 'rgba(29,185,84,0.07)', border: '1px solid rgba(29,185,84,0.2)' }}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: '#1DB954' }}>
+              <SpotifyLogo size={20} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold" style={{ color: '#1DB954' }}>Spotify</div>
+              <div className="text-xs text-white/40">Partage auto de ton écoute</div>
+            </div>
+            <button
+              type="button"
+              onClick={onClose} // close editor and open spotify
+              className="text-xs font-bold px-3 py-1.5 rounded-xl transition-all active:scale-95"
+              style={{ background: '#1DB954', color: '#fff' }}
+              // Note: parent opens SpotifyConnect on close
+            >
+              Connecter
+            </button>
+          </div>
+        </div>
+
         {/* Jam URL */}
         <div className="mb-4">
           <label className="text-xs font-semibold mb-1.5 flex items-center gap-1.5" style={{ color: '#1DB954' }}>

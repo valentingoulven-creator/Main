@@ -377,17 +377,21 @@ export default function App() {
 
               {/* Spotify */}
               <button onClick={() => setShowSpotifyConnect(true)}
-                className="w-7 h-7 rounded-full flex items-center justify-center transition-colors"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all hover:opacity-80"
                 style={spotifyLinked
                   ? { background: 'rgba(29,185,84,0.15)', border: '1px solid rgba(29,185,84,0.35)' }
-                  : { background: 'rgba(255,255,255,0.06)' }}
+                  : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}
                 title={spotifyLinked ? 'Spotify connecté' : 'Connecter Spotify'}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="12" fill={spotifyLinked ? '#1DB954' : 'rgba(255,255,255,0.25)'}/>
+                  <circle cx="12" cy="12" r="12" fill={spotifyLinked ? '#1DB954' : 'rgba(255,255,255,0.3)'}/>
                   <path d="M17.25 10.63c-3.01-1.78-7.97-1.95-10.84-1.08a.97.97 0 1 0 .56 1.86c2.47-.75 6.58-.6 9.17.91a.97.97 0 0 0 1.11-1.69z" fill="white"/>
                   <path d="M16.65 13.58a.81.81 0 0 0-1.12-.27c-2.5-1.54-6.3-1.98-9.26-1.08a.81.81 0 0 0 .47 1.55c2.56-.78 5.75-.33 7.91 1.07a.81.81 0 0 0 1-.27z" fill="white"/>
                   <path d="M15.89 16.49a.65.65 0 0 0-.9-.22 12.3 12.3 0 0 0-7.5-.87.65.65 0 1 0 .29 1.27 11 11 0 0 1 6.69.77.65.65 0 0 0 .92-.95z" fill="white"/>
                 </svg>
+                <span className="text-xs font-semibold"
+                  style={{ color: spotifyLinked ? '#1DB954' : 'rgba(255,255,255,0.4)' }}>
+                  {spotifyLinked ? 'Spotify' : '+ Spotify'}
+                </span>
               </button>
 
               {/* Donate */}
@@ -418,6 +422,44 @@ export default function App() {
         {/* Now playing */}
         <div className="px-4 py-3 flex-shrink-0">
           <div className="text-xs font-semibold text-white/30 uppercase tracking-wider mb-2">J'écoute en ce moment</div>
+
+          {/* Spotify connection CTA — prominent when not connected */}
+          {!spotifyLinked ? (
+            <button onClick={() => setShowSpotifyConnect(true)}
+              className="w-full flex items-center gap-3 p-3.5 rounded-2xl mb-2 transition-all hover:opacity-90 active:scale-[0.99]"
+              style={{ background: 'rgba(29,185,84,0.08)', border: '1.5px dashed rgba(29,185,84,0.3)' }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(29,185,84,0.15)' }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="12" fill="#1DB954"/>
+                  <path d="M17.25 10.63c-3.01-1.78-7.97-1.95-10.84-1.08a.97.97 0 1 0 .56 1.86c2.47-.75 6.58-.6 9.17.91a.97.97 0 0 0 1.11-1.69z" fill="white"/>
+                  <path d="M16.65 13.58a.81.81 0 0 0-1.12-.27c-2.5-1.54-6.3-1.98-9.26-1.08a.81.81 0 0 0 .47 1.55c2.56-.78 5.75-.33 7.91 1.07a.81.81 0 0 0 1-.27z" fill="white"/>
+                  <path d="M15.89 16.49a.65.65 0 0 0-.9-.22 12.3 12.3 0 0 0-7.5-.87.65.65 0 1 0 .29 1.27 11 11 0 0 1 6.69.77.65.65 0 0 0 .92-.95z" fill="white"/>
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0 text-left">
+                <div className="text-sm font-bold" style={{ color: '#1DB954' }}>Connecter Spotify</div>
+                <div className="text-xs text-white/40 mt-0.5">Partage automatiquement ce que tu écoutes</div>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M9 18l6-6-6-6" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+          ) : (
+            /* Spotify connected — show sync status + quick manage */
+            <button onClick={() => setShowSpotifyConnect(true)}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl mb-2 transition-all hover:opacity-80"
+              style={{ background: 'rgba(29,185,84,0.06)', border: '1px solid rgba(29,185,84,0.2)' }}>
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${spotifyTrack?.isPlaying ? 'bg-green-400 animate-pulse' : 'bg-green-600'}`} />
+              <span className="text-xs font-semibold" style={{ color: '#1DB954' }}>
+                {spotifyTrack?.isPlaying ? `Spotify — ${spotifyTrack.title}` : 'Spotify connecté'}
+              </span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="ml-auto flex-shrink-0">
+                <path d="M9 18l6-6-6-6" stroke="rgba(29,185,84,0.5)" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+          )}
+
           <NowPlaying profile={profile} track={myTrack} jamUrl={myJamUrl} onEdit={() => setShowTrackInput(true)} />
           {/* Go Live button */}
           <button onClick={() => amLive ? setShowLiveBroadcast(true) : setShowLiveSetup(true)}
