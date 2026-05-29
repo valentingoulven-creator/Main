@@ -312,9 +312,43 @@ export default function App() {
 
         {/* Header */}
         <header className="flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-          {/* App wordmark */}
-          <div className="flex items-center justify-center pt-3 pb-1">
-            <MeloSongLockup markSize={18} textSize="text-base" />
+          {/* Top bar: Soutenir (left) + Logo (center) + Settings (right) */}
+          <div className="flex items-center px-3 pt-3 pb-1 gap-2">
+            {/* Soutenir MeloSong — gauche, mis en évidence */}
+            <button onClick={() => setShowDonateApp(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-xs transition-all active:scale-95 hover:opacity-90 flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg, #8b5cf6, #ec4899)', color: '#fff', boxShadow: '0 2px 12px rgba(139,92,246,0.35)' }}>
+              <Heart className="w-3.5 h-3.5" />
+              Soutenir
+            </button>
+
+            {/* Logo — centré */}
+            <div className="flex-1 flex justify-center">
+              <MeloSongLockup markSize={18} textSize="text-base" />
+            </div>
+
+            {/* Settings roue crantée — droite */}
+            <div className="relative flex-shrink-0">
+              <button
+                onClick={() => { localStorage.removeItem(PROFILE_KEY); logout(); setProfile(null); setSession(null); setJoined(false); }}
+                title="Déconnexion"
+                className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10 active:scale-95 group"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+              >
+                {/* Gear SVG */}
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+                  className="transition-transform duration-500 group-hover:rotate-45"
+                  stroke="rgba(255,255,255,0.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+              </button>
+              {/* Disconnect tooltip */}
+              <div className="absolute right-0 top-full mt-1.5 px-2 py-1 rounded-lg text-xs font-semibold text-white pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
+                style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}>
+                Se déconnecter
+              </div>
+            </div>
           </div>
 
           {/* Profile — photo large + nom en dessous */}
@@ -383,19 +417,6 @@ export default function App() {
                 </span>
               </button>
 
-              {/* Donate */}
-              <button onClick={() => setShowDonateApp(true)}
-                className="w-7 h-7 rounded-full flex items-center justify-center text-pink-400/50 hover:text-pink-400 hover:bg-pink-400/10 transition-colors"
-                title="Soutenir MeloSong">
-                <Heart className="w-3.5 h-3.5" />
-              </button>
-
-              {/* Logout */}
-              <button onClick={() => { localStorage.removeItem(PROFILE_KEY); logout(); setProfile(null); setSession(null); setJoined(false); }}
-                className="w-7 h-7 rounded-full flex items-center justify-center text-white/20 hover:text-white/50 hover:bg-white/10 transition-colors text-sm"
-                title="Se déconnecter">
-                ↩
-              </button>
             </div>
           </div>
         </header>
