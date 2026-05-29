@@ -1,0 +1,4 @@
+{
+  "install": "cd geoapp && npm install",
+  "start": "cd geoapp && npm run dev"
+}
