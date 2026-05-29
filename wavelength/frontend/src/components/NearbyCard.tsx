@@ -34,7 +34,7 @@ export default function NearbyCard({ user, onClick, onChat, onWatchLive }: Props
       <div className="flex items-center gap-3 p-3.5">
         {/* Avatar */}
         <div className="relative flex-shrink-0">
-          {user.photos && user.photos[0] ? (
+          {user.photos?.[0] ? (
             <img src={user.photos[0]} className="w-11 h-11 rounded-full object-cover shadow-md" />
           ) : (
             <div className="w-11 h-11 rounded-full flex items-center justify-center text-xl shadow-md"
@@ -58,45 +58,53 @@ export default function NearbyCard({ user, onClick, onChat, onWatchLive }: Props
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-sm font-semibold text-white truncate">{user.username}</span>
-            <span className="text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 font-medium"
-              style={{ background: user.color + '22', color: user.color, fontSize: 10 }}>
+          {/* Name row — distance et Jam réduits */}
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="text-sm font-bold text-white truncate">{user.username}</span>
+
+            {/* Distance — petit */}
+            <span className="px-1 py-0.5 rounded-md flex-shrink-0 font-semibold text-white/40"
+              style={{ fontSize: 9, background: 'rgba(255,255,255,0.07)' }}>
               {formatDist(user.distance)}
             </span>
-            {/* Jam badge */}
+
+            {/* Jam badge — petit */}
             {user.jamUrl && (
-              <span className="text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 font-medium badge-spotify flex items-center gap-0.5">
-                <SpotifyLogo size={10} /> Jam
+              <span className="flex items-center gap-0.5 px-1 py-0.5 rounded-md flex-shrink-0"
+                style={{ fontSize: 9, background: 'rgba(29,185,84,0.12)', color: '#1DB954' }}>
+                <SpotifyLogo size={8} /> Jam
               </span>
             )}
           </div>
 
+          {/* Track — plus grand et mis en valeur */}
           {track ? (
-            <div className="flex items-center gap-1.5 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
               {/* Waveform */}
-              <div className="wave-bars flex-shrink-0" style={{ color: user.color, height: 12 }}>
+              <div className="wave-bars flex-shrink-0" style={{ color: user.color, height: 14 }}>
                 {[1,2,3,4,5].map(i => <div key={i} className="wave-bar" />)}
               </div>
-              {/* Platform logo — prominent */}
+              {/* Platform logo */}
               {track.source === 'spotify'
-                ? <SpotifyLogo size={14} className="flex-shrink-0" />
+                ? <SpotifyLogo size={15} className="flex-shrink-0" />
                 : track.source === 'youtube'
-                ? <YouTubeLogo size={14} className="flex-shrink-0" />
-                : <ManualMusicLogo size={14} className="flex-shrink-0" />}
-              <span className="text-xs text-white/65 truncate font-medium">{track.title}</span>
-              {track.artist && (
-                <span className="text-xs text-white/30 truncate hidden md:inline">· {track.artist}</span>
-              )}
+                ? <YouTubeLogo size={15} className="flex-shrink-0" />
+                : <ManualMusicLogo size={15} className="flex-shrink-0" />}
+              <div className="min-w-0">
+                <div className="text-sm font-bold text-white truncate leading-tight">{track.title}</div>
+                {track.artist && (
+                  <div className="text-xs text-white/45 truncate leading-tight">{track.artist}</div>
+                )}
+              </div>
             </div>
           ) : (
             <span className="text-xs text-white/25">Rien en écoute…</span>
           )}
         </div>
 
-        {/* Album art */}
+        {/* Album art — slightly larger */}
         {track?.albumArt && (
-          <img src={track.albumArt} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0 shadow-sm" />
+          <img src={track.albumArt} alt="" className="w-12 h-12 rounded-xl object-cover flex-shrink-0 shadow-md" />
         )}
 
         {/* External link */}
@@ -144,12 +152,11 @@ export default function NearbyCard({ user, onClick, onChat, onWatchLive }: Props
       {user.jamUrl && (
         <a href={user.jamUrl} target="_blank" rel="noopener noreferrer"
           onClick={e => e.stopPropagation()}
-          className="flex items-center justify-center gap-2 py-2 text-xs font-semibold transition-all hover:opacity-90"
-          style={{ background: 'linear-gradient(90deg, rgba(29,185,84,0.15), rgba(29,185,84,0.08))', borderTop: '1px solid rgba(29,185,84,0.15)', color: '#1DB954' }}>
-          <SpotifyLogo size={13} />
-          <Users className="w-3 h-3" />
-          Rejoindre le Jam Spotify
-          <ExternalLink className="w-3 h-3 opacity-60" />
+          className="flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold transition-all hover:opacity-90"
+          style={{ background: 'linear-gradient(90deg, rgba(29,185,84,0.12), rgba(29,185,84,0.06))', borderTop: '1px solid rgba(29,185,84,0.12)', color: '#1DB954' }}>
+          <SpotifyLogo size={11} />
+          Rejoindre le Jam
+          <ExternalLink className="w-3 h-3 opacity-50" />
         </a>
       )}
     </div>
