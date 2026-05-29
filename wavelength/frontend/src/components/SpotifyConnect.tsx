@@ -13,12 +13,11 @@ function isJamUrl(url: string) { return url.includes('spotify.com/jam'); }
 // ─── Auto-sync section ────────────────────────────────────────────────────────
 
 function AutoSyncSection({ onTrackDetected }: { onTrackDetected: (track: Track) => void }) {
-  const [clientId, setClientId] = useState(getClientId());
   const [connected, setConnected] = useState(spConnected());
-  const [showInput, setShowInput] = useState(!getClientId() && !spConnected());
   const [nowPlaying, setNowPlaying] = useState<{ title: string; artist?: string; albumArt?: string } | null>(null);
   const [syncing, setSyncing] = useState(false);
-  const [error, setError] = useState('');
+  const [devMode, setDevMode] = useState(false);
+  const [devClientId, setDevClientId] = useState(getClientId());
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   async function fetchNow() {
@@ -28,9 +27,7 @@ function AutoSyncSection({ onTrackDetected }: { onTrackDetected: (track: Track) 
       const t = await getCurrentlyPlaying();
       if (t) {
         setNowPlaying({ title: t.title, artist: t.artist, albumArt: t.albumArt });
-        if (t.isPlaying) {
-          onTrackDetected({ title: t.title, artist: t.artist, albumArt: t.albumArt, source: 'spotify', url: t.url });
-        }
+        if (t.isPlaying) onTrackDetected({ title: t.title, artist: t.artist, albumArt: t.albumArt, source: 'spotify', url: t.url });
       }
     } catch { /* ignore */ }
     finally { setSyncing(false); }
@@ -44,30 +41,30 @@ function AutoSyncSection({ onTrackDetected }: { onTrackDetected: (track: Track) 
   }, [connected]);
 
   function handleConnect() {
-    if (!clientId.trim()) { setError('Entre ton Client ID'); return; }
-    saveClientId(clientId.trim());
-    startAuth(clientId.trim());
+    const id = getClientId() || devClientId.trim();
+    if (!id) { setDevMode(true); return; }
+    if (devClientId.trim()) saveClientId(devClientId.trim());
+    startAuth(id);
   }
 
   function handleDisconnect() {
-    spDisconnect();
-    setConnected(false);
-    setNowPlaying(null);
+    spDisconnect(); setConnected(false); setNowPlaying(null);
     if (pollRef.current) clearInterval(pollRef.current);
   }
 
+  // ── Connected state ──────────────────────────────────────────────────────────
   if (connected) return (
     <div className="rounded-2xl p-3.5 animate-fade-in"
       style={{ background: 'rgba(29,185,84,0.06)', border: '1px solid rgba(29,185,84,0.2)' }}>
-      <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center gap-2 mb-2.5">
         <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse flex-shrink-0" />
-        <span className="text-xs font-bold" style={{ color: '#1DB954' }}>Synchronisation automatique active</span>
-        <button onClick={() => fetchNow()} className="ml-auto p-1 rounded-lg hover:bg-white/10 transition-colors">
+        <span className="text-xs font-bold flex-1" style={{ color: '#1DB954' }}>Synchronisation automatique active</span>
+        <button onClick={fetchNow} className="p-1 rounded-lg hover:bg-white/10 transition-colors">
           {syncing ? <Loader2 className="w-3.5 h-3.5 animate-spin text-green-400" /> : <RefreshCw className="w-3.5 h-3.5 text-white/30" />}
         </button>
       </div>
       {nowPlaying ? (
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 p-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)' }}>
           {nowPlaying.albumArt && <img src={nowPlaying.albumArt} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />}
           <div className="min-w-0">
             <div className="text-sm font-bold text-white truncate">{nowPlaying.title}</div>
@@ -75,46 +72,53 @@ function AutoSyncSection({ onTrackDetected }: { onTrackDetected: (track: Track) 
           </div>
         </div>
       ) : (
-        <div className="text-xs text-white/30">Lance une chanson sur Spotify…</div>
+        <p className="text-xs text-white/30 text-center py-2">Lance une chanson sur Spotify…</p>
       )}
-      <button onClick={handleDisconnect} className="mt-2 text-xs text-white/25 hover:text-red-400 transition-colors">Déconnecter</button>
+      <button onClick={handleDisconnect} className="mt-2 text-xs text-white/20 hover:text-red-400 transition-colors w-full text-center">
+        Déconnecter Spotify
+      </button>
     </div>
   );
 
+  // ── Not connected ────────────────────────────────────────────────────────────
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(139,92,246,0.2)' }}>
-      <div className="flex items-center gap-2.5 px-4 py-3"
-        style={{ background: 'rgba(139,92,246,0.08)', borderBottom: '1px solid rgba(139,92,246,0.15)' }}>
-        <Zap className="w-4 h-4 flex-shrink-0" style={{ color: '#a78bfa' }} />
-        <div className="flex-1">
-          <div className="text-sm font-bold" style={{ color: '#a78bfa' }}>Sync automatique</div>
-          <div className="text-xs text-white/40">Détecte ce que tu écoutes en temps réel</div>
-        </div>
-        <button onClick={() => setShowInput(s => !s)}
-          className="text-xs px-2.5 py-1 rounded-lg font-semibold transition-all"
-          style={{ background: 'rgba(139,92,246,0.2)', color: '#a78bfa' }}>
-          {showInput ? 'Annuler' : 'Connecter'}
-        </button>
-      </div>
+    <div className="rounded-2xl overflow-hidden animate-fade-in"
+      style={{ border: '1px solid rgba(29,185,84,0.2)' }}>
+      <div className="p-4">
+        <p className="text-xs text-white/50 text-center mb-4 leading-relaxed">
+          Connecte ton compte Spotify — MeloSong détectera automatiquement ce que tu écoutes et le partagera en temps réel.
+        </p>
 
-      {showInput && (
-        <div className="p-4 animate-fade-in">
-          <p className="text-xs text-white/50 mb-3 leading-relaxed">
-            Pour détecter automatiquement ton écoute, connecte Spotify via{' '}
-            <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer" className="text-violet-400 underline underline-offset-1">developer.spotify.com</a>{' '}
-            → créer une app gratuite → Client ID.
-          </p>
-          <input className="wl-input w-full rounded-xl px-3 py-2.5 text-sm font-mono mb-2"
-            placeholder="Client ID Spotify…"
-            value={clientId} onChange={e => { setClientId(e.target.value); setError(''); }} autoFocus />
-          {error && <p className="text-xs text-red-400 mb-2">{error}</p>}
-          <button onClick={handleConnect}
-            className="w-full py-2.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-all active:scale-95"
-            style={{ background: 'linear-gradient(135deg, #1DB954, #158a3e)' }}>
-            <SpotifyLogo size={16} /> Connecter Spotify
-          </button>
-        </div>
-      )}
+        {/* One-click connect button */}
+        <button onClick={handleConnect}
+          className="w-full py-3.5 rounded-2xl font-black text-base text-white flex items-center justify-center gap-3 transition-all active:scale-95 hover:opacity-90 shadow-xl"
+          style={{ background: 'linear-gradient(135deg, #1DB954, #158a3e)', boxShadow: '0 4px 16px rgba(29,185,84,0.4)' }}>
+          <SpotifyLogo size={22} />
+          Se connecter avec Spotify
+        </button>
+
+        {/* Dev mode — only show if no env var configured */}
+        {devMode && (
+          <div className="mt-4 p-3 rounded-xl animate-fade-in"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <p className="text-xs text-white/40 mb-2 leading-relaxed">
+              Configuration requise une seule fois — crée une app sur{' '}
+              <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer"
+                className="text-green-400 underline underline-offset-1">developer.spotify.com</a>{' '}
+              et ajoute <code className="bg-white/10 px-1 rounded text-green-300 text-xs">http://localhost:5174/spotify/callback</code> comme Redirect URI.
+            </p>
+            <input className="wl-input w-full rounded-xl px-3 py-2.5 text-sm font-mono mb-2"
+              placeholder="Client ID (ex: abc123...)"
+              value={devClientId} onChange={e => setDevClientId(e.target.value)} autoFocus
+              onKeyDown={e => e.key === 'Enter' && handleConnect()} />
+            <button onClick={handleConnect} disabled={!devClientId.trim()}
+              className="w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all active:scale-95 disabled:opacity-40"
+              style={{ background: '#1DB954' }}>
+              Connecter
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

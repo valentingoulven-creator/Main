@@ -4,6 +4,8 @@
 //        add http://localhost:5174/spotify/callback as Redirect URI
 
 const CLIENT_ID_KEY   = 'melo_spotify_client_id';
+// Client ID configured by the developer (set VITE_SPOTIFY_CLIENT_ID in .env)
+const ENV_CLIENT_ID   = import.meta.env.VITE_SPOTIFY_CLIENT_ID as string | undefined;
 const TOKEN_KEY       = 'melo_spotify_token';
 const REFRESH_KEY     = 'melo_spotify_refresh';
 const EXPIRY_KEY      = 'melo_spotify_expiry';
@@ -33,11 +35,16 @@ function base64urlencode(buf: ArrayBuffer) {
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 export function getClientId(): string {
-  return localStorage.getItem(CLIENT_ID_KEY) ?? '';
+  // Priority: env var → localStorage fallback
+  return ENV_CLIENT_ID || localStorage.getItem(CLIENT_ID_KEY) || '';
 }
 
 export function saveClientId(id: string) {
   localStorage.setItem(CLIENT_ID_KEY, id.trim());
+}
+
+export function hasClientId(): boolean {
+  return !!(ENV_CLIENT_ID || localStorage.getItem(CLIENT_ID_KEY));
 }
 
 export function isConnected(): boolean {
