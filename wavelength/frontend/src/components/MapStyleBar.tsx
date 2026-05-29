@@ -12,6 +12,14 @@ export interface MapStyleDef {
 
 // Paris centre — zoom 10, tile x=518, y=351
 export const MAP_STYLES_5: MapStyleDef[] = [
+  // ── Sans routes ───────────────────────────────────────────────────────────
+  {
+    id: 'physical',
+    name: 'Monde',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}',
+    attribution: '© Esri, US Geological Survey, NOAA',
+    thumb: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/10/351/518',
+  },
   // ── Sombres ──────────────────────────────────────────────────────────────
   {
     id: 'carto-dark',

@@ -59,7 +59,9 @@ export default function App() {
   const [showProfileEditor, setShowProfileEditor] = useState(false);
   const [showGpsPicker, setShowGpsPicker]         = useState(false);
   const [ratingTarget, setRatingTarget]           = useState<NearbyUser | null>(null);
-  const [mapStyle, setMapStyle]                   = useState<MapStyleDef>(MAP_STYLES_5[0]);
+  const [mapStyle, setMapStyle] = useState<MapStyleDef>(
+    () => MAP_STYLES_5.find(s => s.id === 'physical') ?? MAP_STYLES_5[0]
+  );
   const [showCamera, setShowCamera]               = useState(false);
   const [donateTarget, setDonateTarget]           = useState<NearbyUser | null>(null);
   const [showDonateApp, setShowDonateApp]         = useState(false);
