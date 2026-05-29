@@ -383,7 +383,14 @@ export default function App() {
               <div className="text-base font-black text-white leading-tight">{profile.username}</div>
               {emailVerified && <VerifiedBadge size={16} />}
             </div>
-            <div className="text-xs text-white/35 mt-0.5">membre MeloSong</div>
+            {/* Bio au milieu */}
+            {profile.bio ? (
+              <p className="text-xs text-white/55 mt-1.5 text-center max-w-[280px] leading-relaxed px-2">
+                {profile.bio}
+              </p>
+            ) : (
+              <div className="text-xs text-white/25 mt-0.5">membre MeloSong</div>
+            )}
 
             {/* Action bar */}
             <div className="flex items-center gap-1.5 mt-2.5">
