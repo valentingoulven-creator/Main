@@ -335,7 +335,7 @@ export default function App() {
           <MapView myPosition={geo.position} profile={profile} nearbyUsers={socket.nearbyUsers} focusPosition={focusPosition} />
         ) : (
           <div className="h-full flex flex-col items-center justify-center gap-4 text-center px-8">
-            <MeloSongMark size={72} color="rgba(139,92,246,0.6)" className="mb-3" />
+            <MeloSongMark size={72} className="mb-3 opacity-60" />
             <MeloSongLockup markSize={30} textSize="text-4xl" className="mb-2" />
             <p className="text-sm text-white/40 font-medium">Découvre la musique autour de toi</p>
             <p className="text-xs text-white/25 max-w-xs mt-1 text-center">Active la géolocalisation pour voir les auditeurs à proximité</p>
