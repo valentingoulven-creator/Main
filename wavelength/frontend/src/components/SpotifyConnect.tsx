@@ -1,13 +1,123 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Link2, Loader2, CheckCircle2, ExternalLink, Music2, Users, Copy, Check } from 'lucide-react';
+import { X, Link2, Loader2, CheckCircle2, ExternalLink, Music2, Users, Copy, Check, Zap, RefreshCw } from 'lucide-react';
 import { SpotifyLogo } from './SourceLogo';
 import type { Track } from '../types';
+import { startAuth, getClientId, saveClientId, isConnected as spConnected, getCurrentlyPlaying, disconnect as spDisconnect } from '../utils/spotifyAuth';
 
 interface OEmbed { title: string; author_name?: string; thumbnail_url?: string }
 
 // ─── Detect Spotify URL type ──────────────────────────────────────────────────
 
 function isJamUrl(url: string) { return url.includes('spotify.com/jam'); }
+
+// ─── Auto-sync section ────────────────────────────────────────────────────────
+
+function AutoSyncSection({ onTrackDetected }: { onTrackDetected: (track: Track) => void }) {
+  const [clientId, setClientId] = useState(getClientId());
+  const [connected, setConnected] = useState(spConnected());
+  const [showInput, setShowInput] = useState(!getClientId() && !spConnected());
+  const [nowPlaying, setNowPlaying] = useState<{ title: string; artist?: string; albumArt?: string } | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [error, setError] = useState('');
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  async function fetchNow() {
+    if (!spConnected()) return;
+    setSyncing(true);
+    try {
+      const t = await getCurrentlyPlaying();
+      if (t) {
+        setNowPlaying({ title: t.title, artist: t.artist, albumArt: t.albumArt });
+        if (t.isPlaying) {
+          onTrackDetected({ title: t.title, artist: t.artist, albumArt: t.albumArt, source: 'spotify', url: t.url });
+        }
+      }
+    } catch { /* ignore */ }
+    finally { setSyncing(false); }
+  }
+
+  useEffect(() => {
+    if (!connected) return;
+    fetchNow();
+    pollRef.current = setInterval(fetchNow, 8000);
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+  }, [connected]);
+
+  function handleConnect() {
+    if (!clientId.trim()) { setError('Entre ton Client ID'); return; }
+    saveClientId(clientId.trim());
+    startAuth(clientId.trim());
+  }
+
+  function handleDisconnect() {
+    spDisconnect();
+    setConnected(false);
+    setNowPlaying(null);
+    if (pollRef.current) clearInterval(pollRef.current);
+  }
+
+  if (connected) return (
+    <div className="rounded-2xl p-3.5 animate-fade-in"
+      style={{ background: 'rgba(29,185,84,0.06)', border: '1px solid rgba(29,185,84,0.2)' }}>
+      <div className="flex items-center gap-2 mb-2">
+        <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse flex-shrink-0" />
+        <span className="text-xs font-bold" style={{ color: '#1DB954' }}>Synchronisation automatique active</span>
+        <button onClick={() => fetchNow()} className="ml-auto p-1 rounded-lg hover:bg-white/10 transition-colors">
+          {syncing ? <Loader2 className="w-3.5 h-3.5 animate-spin text-green-400" /> : <RefreshCw className="w-3.5 h-3.5 text-white/30" />}
+        </button>
+      </div>
+      {nowPlaying ? (
+        <div className="flex items-center gap-2.5">
+          {nowPlaying.albumArt && <img src={nowPlaying.albumArt} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />}
+          <div className="min-w-0">
+            <div className="text-sm font-bold text-white truncate">{nowPlaying.title}</div>
+            {nowPlaying.artist && <div className="text-xs text-white/50 truncate">{nowPlaying.artist}</div>}
+          </div>
+        </div>
+      ) : (
+        <div className="text-xs text-white/30">Lance une chanson sur Spotify…</div>
+      )}
+      <button onClick={handleDisconnect} className="mt-2 text-xs text-white/25 hover:text-red-400 transition-colors">Déconnecter</button>
+    </div>
+  );
+
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(139,92,246,0.2)' }}>
+      <div className="flex items-center gap-2.5 px-4 py-3"
+        style={{ background: 'rgba(139,92,246,0.08)', borderBottom: '1px solid rgba(139,92,246,0.15)' }}>
+        <Zap className="w-4 h-4 flex-shrink-0" style={{ color: '#a78bfa' }} />
+        <div className="flex-1">
+          <div className="text-sm font-bold" style={{ color: '#a78bfa' }}>Sync automatique</div>
+          <div className="text-xs text-white/40">Détecte ce que tu écoutes en temps réel</div>
+        </div>
+        <button onClick={() => setShowInput(s => !s)}
+          className="text-xs px-2.5 py-1 rounded-lg font-semibold transition-all"
+          style={{ background: 'rgba(139,92,246,0.2)', color: '#a78bfa' }}>
+          {showInput ? 'Annuler' : 'Connecter'}
+        </button>
+      </div>
+
+      {showInput && (
+        <div className="p-4 animate-fade-in">
+          <p className="text-xs text-white/50 mb-3 leading-relaxed">
+            Pour détecter automatiquement ton écoute, connecte Spotify via{' '}
+            <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer" className="text-violet-400 underline underline-offset-1">developer.spotify.com</a>{' '}
+            → créer une app gratuite → Client ID.
+          </p>
+          <input className="wl-input w-full rounded-xl px-3 py-2.5 text-sm font-mono mb-2"
+            placeholder="Client ID Spotify…"
+            value={clientId} onChange={e => { setClientId(e.target.value); setError(''); }} autoFocus />
+          {error && <p className="text-xs text-red-400 mb-2">{error}</p>}
+          <button onClick={handleConnect}
+            className="w-full py-2.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-all active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #1DB954, #158a3e)' }}>
+            <SpotifyLogo size={16} /> Connecter Spotify
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ─── JAM section ─────────────────────────────────────────────────────────────
 
@@ -265,7 +375,18 @@ export default function SpotifyConnect({ currentTrack, jamUrl = '', onShare, onJ
           {/* Divider */}
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }} />
 
-          {/* ── Section 2: Spotify Jam ── */}
+          {/* ── Section 2: Auto-sync ── */}
+          <div>
+            <div className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3 flex items-center gap-2">
+              <Zap className="w-3.5 h-3.5" /> Écoute automatique
+            </div>
+            <AutoSyncSection onTrackDetected={(t) => { onShare(t); setTrack(t); setShared(true); }} />
+          </div>
+
+          {/* Divider */}
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }} />
+
+          {/* ── Section 3: Spotify Jam ── */}
           <div>
             <div className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3 flex items-center gap-2">
               <Users className="w-3.5 h-3.5" /> Spotify Jam — écoute en groupe

@@ -109,11 +109,16 @@ export default function App() {
   const geo    = useGeolocation();
   const socket = useSocket();
 
-  // ── YouTube OAuth callback ──────────────────────────────────────────────────
+  // ── OAuth callbacks ─────────────────────────────────────────────────────────
   useEffect(() => {
     const path = window.location.pathname;
     const code = new URLSearchParams(window.location.search).get('code');
-    if (path === '/youtube/callback') {
+    if (path === '/spotify/callback') {
+      import('./utils/spotifyAuth').then(({ handleCallback }) => {
+        if (code) handleCallback(code).then(() => setShowSpotifyConnect(true));
+        window.history.replaceState({}, '', '/');
+      });
+    } else if (path === '/youtube/callback') {
       if (code) handleYtCallback(code).then(ok => { setYoutubeLinked(ok); });
       window.history.replaceState({}, '', '/');
     }
