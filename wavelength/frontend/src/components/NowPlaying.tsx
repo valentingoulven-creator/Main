@@ -1,4 +1,4 @@
-import { Play, Pencil, ExternalLink, Users } from 'lucide-react';
+import { Play, Pencil, ExternalLink } from 'lucide-react';
 import type { Track, UserProfile } from '../types';
 import { SourceBadge, SpotifyLogo } from './SourceLogo';
 
@@ -13,11 +13,18 @@ interface Props {
 export default function NowPlaying({ profile, track, jamUrl, onEdit, onOpenSpotify }: Props) {
   const hasJam = !!jamUrl;
 
+  function openJam() {
+    const deepLink = jamUrl!.startsWith('spotify:')
+      ? jamUrl!
+      : `spotify:${jamUrl!.replace('https://open.spotify.com/', '').replace(/\//g, ':')}`;
+    window.location.href = deepLink;
+    setTimeout(() => { window.open(jamUrl, '_blank'); }, 600);
+  }
+
   return (
     <div className="rounded-2xl overflow-hidden">
       {/* ── Main player card ── */}
       <div className="relative">
-        {/* Background blur */}
         {track?.albumArt ? (
           <div className="absolute inset-0 bg-cover bg-center scale-110"
             style={{ backgroundImage: `url(${track.albumArt})`, filter: 'blur(20px) brightness(0.4)' }} />
@@ -51,24 +58,15 @@ export default function NowPlaying({ profile, track, jamUrl, onEdit, onOpenSpoti
                 </div>
                 <div className="text-sm font-bold text-white truncate leading-tight">{track.title}</div>
                 {track.artist && <div className="text-xs text-white/50 truncate mt-0.5">{track.artist}</div>}
-                <div className="mt-1.5 flex items-center gap-2 flex-wrap">
-                  <SourceBadge source={track.source} size={13} />
-                  {hasJam && (
-                    <span className="flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full"
-                      style={{ background: 'rgba(29,185,84,0.15)', color: '#1DB954' }}>
-                      <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" /> Jam actif
-                    </span>
-                  )}
-                </div>
+                <div className="mt-1.5"><SourceBadge source={track.source} size={13} /></div>
               </>
             ) : hasJam ? (
-              /* JAM actif mais pas de morceau partagé */
               <div>
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                   <span className="text-sm font-bold" style={{ color: '#1DB954' }}>Jam Spotify actif</span>
                 </div>
-                <div className="text-xs text-white/40 mt-0.5">Partage ce que tu écoutes dans le Jam</div>
+                <div className="text-xs text-white/40">Partage ce que tu écoutes dans le Jam</div>
                 <button onClick={onOpenSpotify}
                   className="mt-2 text-xs font-bold px-3 py-1.5 rounded-lg transition-all active:scale-95 hover:opacity-90 flex items-center gap-1.5"
                   style={{ background: '#1DB954', color: '#fff' }}>
@@ -91,34 +89,25 @@ export default function NowPlaying({ profile, track, jamUrl, onEdit, onOpenSpoti
         </div>
       </div>
 
-      {/* ── JAM active banner — ouvre directement dans Spotify ── */}
+      {/* ── Jam Spotify strip with button ── */}
       {hasJam && (
-        <div style={{ background: 'linear-gradient(90deg, rgba(29,185,84,0.22), rgba(29,185,84,0.1))', borderTop: '1px solid rgba(29,185,84,0.28)' }}>
-          {/* Open in Spotify — primary CTA */}
-          <a
-            href={jamUrl!.startsWith('spotify:') ? jamUrl! : `spotify:${jamUrl!.replace('https://open.spotify.com/', '').replace(/\//g, ':')}`}
-            onClick={() => { setTimeout(() => { window.open(jamUrl, '_blank'); }, 500); }}
-            className="flex items-center gap-2.5 px-3 pt-2.5 pb-1 transition-all hover:opacity-90 active:scale-[0.99] w-full"
-          >
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md"
-              style={{ background: '#1DB954' }}>
-              <SpotifyLogo size={18} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-black" style={{ color: '#1DB954' }}>
-                {track ? `🎉 ${track.title}` : '🎉 Jam actif — Rejoins l\'écoute !'}
-              </div>
-              <div className="text-xs text-white/40">Ouvrir dans Spotify →</div>
-            </div>
-            <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#1DB954', opacity: 0.6 }} />
-          </a>
-          {/* Invite copy */}
-          <button onClick={() => navigator.clipboard.writeText(jamUrl!)}
-            className="flex items-center justify-center gap-1.5 w-full py-2 text-xs font-semibold transition-all hover:opacity-80"
-            style={{ color: 'rgba(29,185,84,0.7)', borderTop: '1px solid rgba(29,185,84,0.1)' }}>
-            <Users className="w-3 h-3" /> Copier le lien d'invitation
-          </button>
-        </div>
+        <button
+          onClick={openJam}
+          className="w-full flex items-center gap-2.5 px-4 py-2.5 transition-all hover:opacity-90 active:scale-[0.99]"
+          style={{
+            background: 'linear-gradient(90deg, rgba(29,185,84,0.18), rgba(29,185,84,0.08))',
+            borderTop: '1px solid rgba(29,185,84,0.22)',
+          }}
+        >
+          <SpotifyLogo size={16} className="flex-shrink-0" />
+          <span className="text-xs font-black flex-1 text-left truncate" style={{ color: '#1DB954' }}>
+            {track ? `Jam actif — ${track.title}` : 'Jam Spotify actif'}
+          </span>
+          <span className="flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0 transition-all hover:brightness-110"
+            style={{ background: '#1DB954', color: '#fff' }}>
+            Rejoindre <ExternalLink className="w-3 h-3" />
+          </span>
+        </button>
       )}
     </div>
   );
