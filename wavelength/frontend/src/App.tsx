@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Wifi, WifiOff, Navigation, AlertCircle, Loader2, UserCircle2 } from 'lucide-react';
+import { Wifi, WifiOff, Navigation, AlertCircle, Loader2, UserCircle2, MapPin } from 'lucide-react';
 import { MeloSongLockup, MeloSongMark } from './components/MeloSongLogo';
 import SetupScreen from './components/SetupScreen';
 import NowPlaying from './components/NowPlaying';
@@ -11,6 +11,7 @@ import ChatNotification from './components/ChatNotification';
 import ProfileModal from './components/ProfileModal';
 import ProfileEditor from './components/ProfileEditor';
 import { useGeolocation } from './hooks/useGeolocation';
+import GpsPicker from './components/GpsPicker';
 import { useSocket } from './hooks/useSocket';
 import type { UserProfile, Track, Coordinates, ChatStatus, ChatConversation, IncomingChatRequest, NearbyUser, ChatPeer } from './types';
 
@@ -39,6 +40,7 @@ export default function App() {
   const [chatStatus, setChatStatus] = useState<ChatStatus>(loadChatStatus);
   const [showTrackInput, setShowTrackInput] = useState(false);
   const [showProfileEditor, setShowProfileEditor] = useState(false);
+  const [showGpsPicker, setShowGpsPicker]         = useState(false);
   const [focusPosition, setFocusPosition]   = useState<Coordinates | null>(null);
   const [viewedProfile, setViewedProfile]   = useState<NearbyUser | null>(null);
   const [joined, setJoined] = useState(false);
@@ -282,24 +284,32 @@ export default function App() {
         {/* Location status */}
         {!geo.position && (
           <div className="px-4 flex-shrink-0">
-            {geo.error ? (
-              <div className="flex items-start gap-2 p-3 rounded-xl mb-2 text-xs text-red-300"
-                style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.15)' }}>
-                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-red-400" />
-                <span className="flex-1">{geo.error}</span>
-                <button onClick={geo.request} className="underline whitespace-nowrap">Réessayer</button>
-              </div>
-            ) : geo.loading ? (
+            {geo.loading ? (
               <div className="flex items-center gap-2 p-3 rounded-xl mb-2 text-xs text-white/40"
                 style={{ background: 'rgba(255,255,255,0.04)' }}>
-                <Loader2 className="w-4 h-4 animate-spin" /> Localisation GPS en cours…
+                <Loader2 className="w-4 h-4 animate-spin" /> GPS en cours…
               </div>
             ) : (
-              <button onClick={geo.request}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl mb-2 text-sm font-semibold text-white transition-all active:scale-95"
-                style={{ background: `linear-gradient(135deg, ${profile.color}, #ec4899)` }}>
-                <Navigation className="w-4 h-4" /> Activer le GPS
-              </button>
+              <>
+                {geo.error && (
+                  <div className="flex items-start gap-2 p-3 rounded-xl mb-2 text-xs text-red-300"
+                    style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.15)' }}>
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-red-400" />
+                    <span className="flex-1">{geo.error}</span>
+                    <button onClick={geo.request} className="underline whitespace-nowrap">Réessayer</button>
+                  </div>
+                )}
+                <button onClick={geo.request}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl mb-1.5 text-sm font-semibold text-white transition-all active:scale-95"
+                  style={{ background: `linear-gradient(135deg, ${profile.color}, #ec4899)` }}>
+                  <Navigation className="w-4 h-4" /> Activer le GPS
+                </button>
+                <button onClick={() => setShowGpsPicker(true)}
+                  className="w-full flex items-center justify-center gap-2 py-2 rounded-xl mb-2 text-xs font-medium transition-all active:scale-95 text-white/50 hover:text-white/80"
+                  style={{ background: 'rgba(255,255,255,0.05)' }}>
+                  <MapPin className="w-3.5 h-3.5" /> Choisir sur la carte
+                </button>
+              </>
             )}
           </div>
         )}
@@ -333,22 +343,22 @@ export default function App() {
               <div className="flex items-center gap-2 text-sm text-white/40">
                 <Loader2 className="w-4 h-4 animate-spin" /> GPS en cours…
               </div>
-            ) : geo.error ? (
-              <div className="flex flex-col items-center gap-3 max-w-xs text-center">
-                <AlertCircle className="w-8 h-8 text-red-400 opacity-70" />
-                <p className="text-xs text-red-400">{geo.error}</p>
+            ) : (
+              <div className="flex flex-col items-center gap-3">
+                {geo.error && (
+                  <p className="text-xs text-red-400 text-center max-w-xs">{geo.error}</p>
+                )}
                 <button onClick={geo.request}
-                  className="flex items-center gap-2 py-2.5 px-5 rounded-2xl font-semibold text-sm text-white transition-all active:scale-95"
+                  className="flex items-center gap-2 py-3 px-6 rounded-2xl font-semibold text-sm text-white transition-all active:scale-95 shadow-lg hover:opacity-90"
                   style={{ background: `linear-gradient(135deg, ${profile.color}, #ec4899)` }}>
-                  <Navigation className="w-4 h-4" /> Réessayer le GPS
+                  <Navigation className="w-4 h-4" /> Activer le GPS
+                </button>
+                <button onClick={() => setShowGpsPicker(true)}
+                  className="flex items-center gap-2 py-2.5 px-5 rounded-2xl text-sm font-medium text-white/50 hover:text-white/80 transition-all"
+                  style={{ background: 'rgba(255,255,255,0.06)' }}>
+                  <MapPin className="w-4 h-4" /> Choisir sur la carte
                 </button>
               </div>
-            ) : (
-              <button onClick={geo.request}
-                className="flex items-center gap-2 py-3 px-6 rounded-2xl font-semibold text-sm text-white transition-all active:scale-95 shadow-lg hover:opacity-90"
-                style={{ background: `linear-gradient(135deg, ${profile.color}, #ec4899)` }}>
-                <Navigation className="w-4 h-4" /> Activer le GPS
-              </button>
             )}
           </div>
         )}
@@ -393,6 +403,15 @@ export default function App() {
         <ChatWindow key={conv.peer.id} conv={conv} onSend={(text) => handleSendMessage(conv.peer.id, text)}
           onClose={() => handleCloseChat(conv.peer.id)} myColor={profile.color} index={i} />
       ))}
+
+      {/* GPS Picker fullscreen */}
+      {showGpsPicker && (
+        <GpsPicker
+          accentColor={profile.color}
+          onConfirm={(coords) => { geo.setManual(coords); setShowGpsPicker(false); }}
+          onClose={() => setShowGpsPicker(false)}
+        />
+      )}
     </div>
   );
 }

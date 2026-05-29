@@ -36,5 +36,9 @@ export function useGeolocation() {
     );
   }, []);
 
-  return { ...state, request };
+  const setManual = useCallback((coords: Coordinates) => {
+    setState({ position: coords, error: null, loading: false });
+  }, []);
+
+  return { ...state, request, setManual };
 }
