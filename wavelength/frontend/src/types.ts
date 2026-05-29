@@ -11,7 +11,7 @@ export interface Track {
   url?: string;
 }
 
-export type PlatformKey = 'spotify' | 'deezer' | 'youtube' | 'youtubemusic';
+export type PlatformKey = 'spotify';
 export type ConnectedApps = Partial<Record<PlatformKey, string>>;
 
 export interface UserProfile {

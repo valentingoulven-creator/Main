@@ -92,7 +92,7 @@ export function SourceBadge({ source, size = 15 }: SourceBadgeProps) {
 
 // ─── Platform config (for connected apps) ────────────────────────────────────
 
-export type PlatformKey = 'spotify' | 'deezer' | 'youtube' | 'youtubemusic';
+export type PlatformKey = 'spotify';
 
 export interface PlatformConfig {
   key: PlatformKey;
@@ -113,32 +113,5 @@ export const PLATFORMS: PlatformConfig[] = [
     placeholder: 'Lien profil ou nom d\'utilisateur',
     Logo: SpotifyLogo,
     buildUrl: (v) => v.startsWith('http') ? v : `https://open.spotify.com/user/${v}`,
-  },
-  {
-    key: 'deezer',
-    label: 'Deezer',
-    color: '#ef5466',
-    bgColor: 'rgba(239,84,102,0.12)',
-    placeholder: 'Lien profil ou nom d\'utilisateur',
-    Logo: DeezerLogo,
-    buildUrl: (v) => v.startsWith('http') ? v : `https://www.deezer.com/profile/${v}`,
-  },
-  {
-    key: 'youtube',
-    label: 'YouTube',
-    color: '#FF0000',
-    bgColor: 'rgba(255,0,0,0.10)',
-    placeholder: '@handle ou lien chaîne',
-    Logo: YouTubeLogo,
-    buildUrl: (v) => v.startsWith('http') ? v : `https://www.youtube.com/@${v.replace('@', '')}`,
-  },
-  {
-    key: 'youtubemusic',
-    label: 'YouTube Music',
-    color: '#FF0000',
-    bgColor: 'rgba(255,0,0,0.10)',
-    placeholder: '@handle ou lien chaîne',
-    Logo: YouTubeMusicLogo,
-    buildUrl: (v) => v.startsWith('http') ? v : `https://music.youtube.com/@${v.replace('@', '')}`,
   },
 ];
