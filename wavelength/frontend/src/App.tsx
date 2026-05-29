@@ -284,7 +284,6 @@ export default function App() {
         {!geo.position && (
           geo.unavailable ? (
             <LocationFallback
-              accentColor={profile.color}
               onLocate={(coords) => { geo.setManual(coords); }}
               onRetryGPS={geo.request}
             />
@@ -342,7 +341,6 @@ export default function App() {
             {geo.unavailable ? (
               <div className="w-full max-w-sm">
                 <LocationFallback
-                  accentColor={profile.color}
                   onLocate={(coords) => { geo.setManual(coords); }}
                   onRetryGPS={geo.request}
                 />
