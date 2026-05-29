@@ -78,3 +78,22 @@ export interface IncomingChatRequest {
   from: ChatPeer;
   timestamp: number;
 }
+
+// ─── Ratings ──────────────────────────────────────────────────────────────────
+
+export interface Rating {
+  fromId: string;
+  fromUsername: string;
+  fromEmoji: string;
+  fromColor: string;
+  fromPhoto?: string;
+  vibe: string;   // emoji vibe chosen
+  note?: string;  // optional text
+  timestamp: number;
+}
+
+export interface RatingSummary {
+  targetId: string;
+  ratings: Rating[];
+  avgVibe: string;
+}

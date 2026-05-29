@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { X, MessageCircle, ExternalLink, Music2, MapPin, Cake } from 'lucide-react';
-import type { NearbyUser } from '../types';
+import { X, MessageCircle, ExternalLink, Music2, MapPin, Cake, Star } from 'lucide-react';
+import type { NearbyUser, Rating } from '../types';
 import { calcAge } from '../utils/ageUtils';
 import { SpotifyLogo, YouTubeLogo, PLATFORMS } from './SourceLogo';
 
@@ -8,14 +8,21 @@ interface Props {
   user: NearbyUser;
   onClose: () => void;
   onChat: () => void;
+  onRate: () => void;
   canChat: boolean;
+  ratings?: Rating[];
+  myRating?: string;
 }
 
 function formatDist(m: number) {
   return m < 1000 ? `${m} m` : `${(m / 1000).toFixed(1)} km`;
 }
 
-export default function ProfileModal({ user, onClose, onChat, canChat }: Props) {
+function formatTime(ts: number) {
+  return new Date(ts).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+}
+
+export default function ProfileModal({ user, onClose, onChat, onRate, canChat, ratings = [], myRating }: Props) {
   const [photoIdx, setPhotoIdx] = useState(0);
   const photos = user.photos ?? [];
   const { track } = user;
@@ -173,6 +180,69 @@ export default function ProfileModal({ user, onClose, onChat, canChat }: Props) 
               <SpotifyLogo size={16} /> Rejoindre le Jam Spotify 🎉
             </a>
           )}
+
+          {/* Ratings */}
+          {ratings.length > 0 && (
+            <div className="mb-4">
+              <div className="text-xs font-semibold text-white/30 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <Star className="w-3.5 h-3.5" /> Notes de sympathie
+                <span className="text-white/20 normal-case font-normal">({ratings.length})</span>
+              </div>
+              {/* Vibe summary */}
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {Object.entries(
+                  ratings.reduce((acc: Record<string, number>, r) => {
+                    acc[r.vibe] = (acc[r.vibe] ?? 0) + 1;
+                    return acc;
+                  }, {})
+                )
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([emoji, count]) => (
+                    <span key={emoji} className="flex items-center gap-1 text-sm px-2.5 py-1 rounded-full"
+                      style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      {emoji}
+                      <span className="text-xs text-white/50 font-semibold">{count}</span>
+                    </span>
+                  ))}
+              </div>
+              {/* Recent notes */}
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {ratings.filter(r => r.note).slice(0, 5).map((r, i) => (
+                  <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-xl"
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    {r.fromPhoto ? (
+                      <img src={r.fromPhoto} className="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-0.5" />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0 mt-0.5"
+                        style={{ background: r.fromColor }}>{r.fromEmoji}</div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className="text-xs font-semibold text-white/70">{r.fromUsername}</span>
+                        <span className="text-base leading-none">{r.vibe}</span>
+                        <span className="text-xs text-white/25 ml-auto">{formatTime(r.timestamp)}</span>
+                      </div>
+                      <p className="text-xs text-white/50 leading-relaxed">{r.note}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Rate button */}
+          <button onClick={onRate}
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-2xl mb-2
+              font-semibold text-sm transition-all hover:opacity-90 active:scale-95"
+            style={{ background: myRating
+              ? `${user.color}22`
+              : 'rgba(255,255,255,0.07)',
+              border: myRating ? `1px solid ${user.color}44` : '1px solid rgba(255,255,255,0.1)',
+              color: myRating ? user.color : 'rgba(255,255,255,0.6)'
+            }}>
+            <Star className="w-4 h-4" />
+            {myRating ? `Ta note : ${myRating} — Modifier` : 'Laisser une note de sympathie'}
+          </button>
 
           {/* Chat */}
           <button onClick={() => { if (canChat) { onChat(); onClose(); } }} disabled={!canChat}

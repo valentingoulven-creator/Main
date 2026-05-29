@@ -10,11 +10,12 @@ import ChatWindow from './components/ChatWindow';
 import ChatNotification from './components/ChatNotification';
 import ProfileModal from './components/ProfileModal';
 import ProfileEditor from './components/ProfileEditor';
+import RatingPicker from './components/RatingPicker';
 import { useGeolocation } from './hooks/useGeolocation';
 import GpsPicker from './components/GpsPicker';
 import AdBanner from './components/AdBanner';
 import { useSocket } from './hooks/useSocket';
-import type { UserProfile, Track, Coordinates, ChatStatus, ChatConversation, IncomingChatRequest, NearbyUser, ChatPeer } from './types';
+import type { UserProfile, Track, Coordinates, ChatStatus, ChatConversation, IncomingChatRequest, NearbyUser, ChatPeer, Rating } from './types';
 
 const PROFILE_KEY   = 'melo_profile';
 const JAM_KEY       = 'melo_jam_url';
@@ -42,6 +43,9 @@ export default function App() {
   const [showTrackInput, setShowTrackInput] = useState(false);
   const [showProfileEditor, setShowProfileEditor] = useState(false);
   const [showGpsPicker, setShowGpsPicker]         = useState(false);
+  const [ratingTarget, setRatingTarget]           = useState<NearbyUser | null>(null);
+  const [ratingsCache, setRatingsCache]           = useState<Record<string, Rating[]>>({});
+  const [myRatings, setMyRatings]                 = useState<Record<string, string>>({}); // targetId → vibe
   const [focusPosition, setFocusPosition]   = useState<Coordinates | null>(null);
   const [viewedProfile, setViewedProfile]   = useState<NearbyUser | null>(null);
   const [joined, setJoined] = useState(false);
@@ -53,6 +57,15 @@ export default function App() {
 
   const geo    = useGeolocation();
   const socket = useSocket();
+
+  // Register rating callbacks
+  useEffect(() => {
+    socket.registerRatingCallbacks({
+      onRatingsData: (targetId, ratings) => {
+        setRatingsCache(prev => ({ ...prev, [targetId]: ratings }));
+      },
+    });
+  }, [socket]);
 
   // Register chat callbacks
   useEffect(() => {
@@ -87,7 +100,7 @@ export default function App() {
         });
         setOpenChatId(id => id ?? from.id);
       },
-      onChatClosed: (fromId) => {
+      onChatClosed: (fromId: string) => {
         setConversations(prev => {
           const m = new Map<string, ChatConversation>(prev);
           const ex = m.get(fromId);
@@ -201,6 +214,17 @@ export default function App() {
       return m;
     });
   }, [socket]);
+
+  const handleOpenProfile = useCallback((user: NearbyUser) => {
+    setViewedProfile(user);
+    socket.getRatings(user.id);
+  }, [socket]);
+
+  const handleSendRating = useCallback((vibe: string, note: string) => {
+    if (!ratingTarget) return;
+    socket.sendRating(ratingTarget.id, vibe, note);
+    setMyRatings(prev => ({ ...prev, [ratingTarget.id]: vibe }));
+  }, [socket, ratingTarget]);
 
   const handleCloseChat = useCallback((id: string) => {
     socket.closeChat(id);
@@ -321,9 +345,9 @@ export default function App() {
             users={socket.nearbyUsers}
             radius={radius}
             onRadiusChange={handleRadiusChange}
-            onSelectUser={(pos) => setFocusPosition(pos)}
-            onChatUser={handleStartChat}
-            onViewProfile={setViewedProfile}
+              onSelectUser={(pos) => setFocusPosition(pos)}
+              onChatUser={handleStartChat}
+              onViewProfile={handleOpenProfile}
             myChatStatus={chatStatus}
             accentColor={profile.color}
           />
@@ -393,7 +417,10 @@ export default function App() {
           user={viewedProfile}
           onClose={() => setViewedProfile(null)}
           onChat={() => { handleStartChat(viewedProfile); setViewedProfile(null); }}
+          onRate={() => { setRatingTarget(viewedProfile); setViewedProfile(null); }}
           canChat={viewedProfile.chatStatus !== 'dnd'}
+          ratings={ratingsCache[viewedProfile.id]}
+          myRating={myRatings[viewedProfile.id]}
         />
       )}
 
@@ -405,6 +432,16 @@ export default function App() {
         <ChatWindow key={conv.peer.id} conv={conv} onSend={(text) => handleSendMessage(conv.peer.id, text)}
           onClose={() => handleCloseChat(conv.peer.id)} myColor={profile.color} index={i} />
       ))}
+
+      {/* Rating picker */}
+      {ratingTarget && (
+        <RatingPicker
+          user={ratingTarget}
+          alreadyRated={myRatings[ratingTarget.id]}
+          onSubmit={handleSendRating}
+          onClose={() => setRatingTarget(null)}
+        />
+      )}
 
       {/* GPS Picker fullscreen */}
       {showGpsPicker && (

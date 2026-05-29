@@ -264,6 +264,21 @@ function initMockUsers(lat, lng) {
   });
 }
 
+// ─── Ratings store ────────────────────────────────────────────────────────────
+// Map<targetId, Rating[]>
+const ratingsStore = new Map();
+
+function getRatings(targetId) {
+  return ratingsStore.get(targetId) ?? [];
+}
+
+function addRating(targetId, rating) {
+  const existing = getRatings(targetId);
+  // One rating per (fromId, targetId) — overwrite if exists
+  const filtered = existing.filter(r => r.fromId !== rating.fromId);
+  ratingsStore.set(targetId, [rating, ...filtered].slice(0, 50)); // keep last 50
+}
+
 // ─── Connected users ──────────────────────────────────────────────────────────
 
 const connectedUsers = new Map();
@@ -477,6 +492,42 @@ io.on('connection', (socket) => {
   socket.on('chat_close', ({ to }) => {
     if (String(to).startsWith('mock-')) return;
     io.sockets.sockets.get(to)?.emit('chat_closed', { fromId: socket.id });
+  });
+
+  // ── Ratings ─────────────────────────────────────────────────────────────────
+
+  socket.on('send_rating', ({ targetId, vibe, note }) => {
+    const sender = connectedUsers.get(socket.id);
+    if (!sender || !vibe) return;
+
+    const rating = {
+      fromId: socket.id,
+      fromUsername: sender.username,
+      fromEmoji: sender.emoji,
+      fromColor: sender.color,
+      fromPhoto: sender.photos?.[0] ?? null,
+      vibe,
+      note: note?.trim() || null,
+      timestamp: Date.now(),
+    };
+
+    addRating(targetId, rating);
+
+    // Notify the rated user if they're connected
+    if (!String(targetId).startsWith('mock-')) {
+      io.sockets.sockets.get(targetId)?.emit('rating_received', {
+        from: { id: socket.id, username: sender.username, emoji: sender.emoji, color: sender.color },
+        vibe,
+        note: rating.note,
+      });
+    }
+
+    // Send back the updated ratings to requester
+    socket.emit('ratings_data', { targetId, ratings: getRatings(targetId) });
+  });
+
+  socket.on('get_ratings', ({ targetId }) => {
+    socket.emit('ratings_data', { targetId, ratings: getRatings(targetId) });
   });
 });
 
