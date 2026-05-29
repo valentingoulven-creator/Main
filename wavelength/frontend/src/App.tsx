@@ -23,8 +23,7 @@ import LiveBroadcast from './components/LiveBroadcast';
 import LiveSetupModal from './components/LiveSetupModal';
 import type { LiveVisibility } from './components/LiveSetupModal';
 import LiveViewer from './components/LiveViewer';
-import DiscoverTab from './components/DiscoverTab';
-import LiveFeed from './components/LiveFeed';
+import DiscoverView from './components/DiscoverView';
 import BottomNav from './components/BottomNav';
 import SpotifyConnect from './components/SpotifyConnect';
 import YouTubeConnect from './components/YouTubeConnect';
@@ -580,13 +579,11 @@ export default function App() {
               accentColor={profile.color}
             />
           ) : (
-            <DiscoverTab
-              lives={socket.publicLives}
-              onWatch={(live) => setWatchingLive(live as unknown as NearbyUser)}
-              onRefresh={socket.getPublicLivesReq}
-              accentColor={profile.color}
-            />
-          )}
+            <div className="flex-1 flex items-center justify-center text-xs text-white/25">
+              Voir le panneau Découvrir →
+            </div>
+          )
+          }
         </div>
         </div>{/* end inner 400px div */}
       </aside>
@@ -600,7 +597,7 @@ export default function App() {
         {/* Live feed (Découvrir) replaces map — also on mobile discover tab */}
         {view === 'discover' || mobileTab === 'discover' ? (
           <div className="flex-1 overflow-hidden">
-            <LiveFeed
+            <DiscoverView
               lives={socket.publicLives}
               onWatch={(live) => setWatchingLive(live as unknown as NearbyUser)}
               onRefresh={socket.getPublicLivesReq}
