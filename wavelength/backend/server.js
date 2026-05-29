@@ -2,6 +2,7 @@ const express = require('express');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const httpServer = createServer(app);
@@ -325,6 +326,75 @@ function initMockUsers(lat, lng) {
   });
 }
 
+// ─── Email transport ──────────────────────────────────────────────────────────
+
+let transporter = null;
+let testAccount = null;
+const APP_URL = process.env.APP_URL || 'http://localhost:5174';
+
+async function getTransporter() {
+  if (transporter) return transporter;
+  if (process.env.SMTP_HOST) {
+    transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    });
+  } else {
+    testAccount = await nodemailer.createTestAccount();
+    transporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email', port: 587,
+      auth: { user: testAccount.user, pass: testAccount.pass },
+    });
+    console.log('📧 Ethereal test account:', testAccount.user);
+  }
+  return transporter;
+}
+
+function verificationEmailHTML(username, verifyUrl, code) {
+  return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Valide ton compte MeloSong</title></head>
+<body style="margin:0;padding:0;background:#0d0d1a;font-family:system-ui,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0d0d1a;padding:40px 20px;">
+  <tr><td align="center">
+  <table width="520" cellpadding="0" cellspacing="0" style="background:rgba(255,255,255,0.05);border-radius:24px;border:1px solid rgba(255,255,255,0.1);overflow:hidden;">
+    <tr><td style="background:linear-gradient(135deg,#8b5cf6,#ec4899);padding:32px;text-align:center;">
+      <svg width="44" height="36" viewBox="0 0 110 90" fill="none" style="display:block;margin:0 auto 12px;"><polyline points="8,82 8,8 46,82 46,8" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><polyline points="56,82 56,8 83,50 102,8 102,82" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <h1 style="color:white;margin:0;font-size:26px;font-weight:900;">MeloSong</h1>
+      <p style="color:rgba(255,255,255,0.7);margin:6px 0 0;font-size:14px;">Découvre la musique autour de toi</p>
+    </td></tr>
+    <tr><td style="padding:36px 32px;">
+      <h2 style="color:white;margin:0 0 8px;font-size:20px;font-weight:800;">Salut ${username} 👋</h2>
+      <p style="color:rgba(255,255,255,0.6);font-size:15px;line-height:1.6;margin:0 0 28px;">
+        Bienvenue sur MeloSong ! Valide ton adresse email pour obtenir ton
+        <strong style="color:#fbbf24;"> ⭐ badge compte vérifié</strong> visible sur ton profil.
+      </p>
+      <div style="text-align:center;margin:0 0 28px;">
+        <a href="${verifyUrl}"
+           style="display:inline-block;background:linear-gradient(135deg,#8b5cf6,#ec4899);color:white;text-decoration:none;padding:16px 44px;border-radius:16px;font-size:17px;font-weight:900;box-shadow:0 8px 24px rgba(139,92,246,0.4);">
+          ⭐ Valider mon compte
+        </a>
+      </div>
+      <div style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:14px;padding:18px;text-align:center;margin:0 0 22px;">
+        <div style="font-size:36px;margin-bottom:6px;">⭐</div>
+        <p style="color:#fbbf24;margin:0;font-size:13px;font-weight:700;">Badge compte vérifié</p>
+        <p style="color:rgba(255,255,255,0.35);margin:4px 0 0;font-size:12px;">Affiché sur ton profil dès la validation</p>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px;text-align:center;">
+        <p style="color:rgba(255,255,255,0.35);font-size:12px;margin:0 0 8px;">Ou entre ce code dans l'app :</p>
+        <div style="font-size:30px;font-weight:900;letter-spacing:8px;color:white;font-family:monospace;">${code}</div>
+      </div>
+    </td></tr>
+    <tr><td style="border-top:1px solid rgba(255,255,255,0.07);padding:18px 32px;text-align:center;">
+      <p style="color:rgba(255,255,255,0.2);font-size:11px;margin:0;">Ce lien expire dans 24h · © 2026 MeloSong</p>
+    </td></tr>
+  </table>
+  </td></tr>
+</table></body></html>`;
+}
+
 // ─── Auth store (in-memory + persisted to simple JSON) ───────────────────────
 
 const crypto = require('crypto');
@@ -444,6 +514,47 @@ function pushAll() {
 // ─── Socket.io ────────────────────────────────────────────────────────────────
 
 // ─── Auth REST endpoints ──────────────────────────────────────────────────────
+
+// ─── Email verification endpoints ────────────────────────────────────────────
+
+app.post('/api/send-verification', async (req, res) => {
+  const { uid, email, username, code } = req.body ?? {};
+  if (!uid || !email || !code) return res.status(400).json({ error: 'Données manquantes' });
+
+  const verifyUrl = `${APP_URL}/verify-email?uid=${uid}&code=${code}`;
+  try {
+    const t = await getTransporter();
+    const info = await t.sendMail({
+      from: '"MeloSong" <noreply@melosong.app>',
+      to: email,
+      subject: '⭐ Valide ton compte MeloSong',
+      html: verificationEmailHTML(username, verifyUrl, code),
+    });
+
+    const previewUrl = nodemailer.getTestMessageUrl(info);
+    console.log(`📧 Email envoyé à ${email} — Preview: ${previewUrl || 'N/A'}`);
+    res.json({ ok: true, previewUrl: previewUrl || null });
+  } catch (err) {
+    console.error('Email error:', err);
+    res.status(500).json({ error: 'Erreur envoi email' });
+  }
+});
+
+// Link-click verification (GET from email)
+app.get('/api/verify-email', (req, res) => {
+  const { uid, code } = req.query;
+  const accounts = serverAccounts;
+  const idx = accounts.findIndex(a => a.uid === uid);
+  if (idx < 0) return res.redirect(`${APP_URL}/verify-error`);
+  if (accounts[idx].verifyCode !== code) return res.redirect(`${APP_URL}/verify-error`);
+
+  accounts[idx].emailVerified = true;
+  accounts[idx].verifyCode = null;
+  saveServerAccounts();
+
+  // Redirect to app with success flag
+  res.redirect(`${APP_URL}/?verified=1&uid=${uid}`);
+});
 
 app.post('/api/register', (req, res) => {
   const { email, username, password } = req.body ?? {};

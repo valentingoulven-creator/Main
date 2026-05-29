@@ -112,10 +112,23 @@ export default function App() {
   const geo    = useGeolocation();
   const socket = useSocket();
 
-  // ── OAuth callbacks ─────────────────────────────────────────────────────────
+  // ── Callbacks (OAuth + email verification) ──────────────────────────────────
   useEffect(() => {
-    const path = window.location.pathname;
-    const code = new URLSearchParams(window.location.search).get('code');
+    const path   = window.location.pathname;
+    const params = new URLSearchParams(window.location.search);
+    const code   = params.get('code');
+
+    // Email link-click verification
+    if (params.get('verified') === '1') {
+      setEmailVerified(true);
+      try {
+        const raw = localStorage.getItem('melo_session');
+        if (raw) { const s = JSON.parse(raw); s.emailVerified = true; localStorage.setItem('melo_session', JSON.stringify(s)); }
+      } catch { /* ignore */ }
+      window.history.replaceState({}, '', '/');
+      return;
+    }
+
     if (path === '/spotify/callback') {
       import('./utils/spotifyAuth').then(({ handleCallback }) => {
         if (code) handleCallback(code).then(() => setShowSpotifyConnect(true));
@@ -487,7 +500,9 @@ export default function App() {
         {/* Email verify banner */}
         {session && !emailVerified && (
           <EmailVerifyBanner
+            uid={session.uid}
             email={session.email}
+            username={session.username}
             onVerified={() => setEmailVerified(true)}
           />
         )}
