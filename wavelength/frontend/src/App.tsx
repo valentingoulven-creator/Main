@@ -22,6 +22,9 @@ import { DonateUser, DonateApp } from './components/DonateModal';
 import LiveBroadcast from './components/LiveBroadcast';
 import LiveViewer from './components/LiveViewer';
 import DiscoverTab from './components/DiscoverTab';
+import SpotifyConnect from './components/SpotifyConnect';
+import { useSpotifyNowPlaying } from './hooks/useSpotifyNowPlaying';
+import { handleCallback, isConnected as spotifyConnected } from './utils/spotifyAuth';
 import type { PublicLive } from './types';
 import { useSocket } from './hooks/useSocket';
 import type { UserProfile, Track, Coordinates, ChatStatus, ChatConversation, IncomingChatRequest, NearbyUser, ChatPeer, Rating } from './types';
@@ -60,6 +63,8 @@ export default function App() {
   const [showCamera, setShowCamera]               = useState(false);
   const [donateTarget, setDonateTarget]           = useState<NearbyUser | null>(null);
   const [showDonateApp, setShowDonateApp]         = useState(false);
+  const [showSpotifyConnect, setShowSpotifyConnect] = useState(false);
+  const [spotifyLinked, setSpotifyLinked]           = useState(spotifyConnected);
   const [showLiveBroadcast, setShowLiveBroadcast] = useState(false);
   const [watchingLive, setWatchingLive]           = useState<NearbyUser | PublicLive | null>(null);
   const [amLive, setAmLive]                       = useState(false);
@@ -78,6 +83,30 @@ export default function App() {
 
   const geo    = useGeolocation();
   const socket = useSocket();
+
+  // ── Spotify OAuth callback ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (window.location.pathname === '/spotify/callback') {
+      const code = new URLSearchParams(window.location.search).get('code');
+      if (code) {
+        handleCallback(code).then(ok => {
+          setSpotifyLinked(ok);
+          window.history.replaceState({}, '', '/');
+        });
+      } else {
+        window.history.replaceState({}, '', '/');
+      }
+    }
+  }, []);
+
+  // ── Spotify Now Playing ─────────────────────────────────────────────────────
+  const { track: spotifyTrack, loading: spotifyLoading, refresh: spotifyRefresh } =
+    useSpotifyNowPlaying(spotifyLinked, (track) => {
+      if (!track) return;
+      const t = { title: track.title, artist: track.artist, albumArt: track.albumArt, source: 'spotify' as const, url: track.url };
+      setMyTrack(t);
+      if (joined) socket.updateTrack(t);
+    });
 
   // Register live callbacks
   useEffect(() => {
@@ -332,6 +361,22 @@ export default function App() {
             <UserCircle2 className="w-4 h-4" />
           </button>
 
+          {/* Spotify link */}
+          <button onClick={() => setShowSpotifyConnect(true)}
+            className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+            style={spotifyLinked
+              ? { background: 'rgba(29,185,84,0.15)', border: '1px solid rgba(29,185,84,0.3)' }
+              : { background: 'rgba(255,255,255,0.05)' }
+            }
+            title={spotifyLinked ? 'Spotify connecté' : 'Connecter Spotify'}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="12" fill={spotifyLinked ? '#1DB954' : 'rgba(255,255,255,0.2)'}/>
+              <path d="M17.25 10.63c-3.01-1.78-7.97-1.95-10.84-1.08a.97.97 0 1 0 .56 1.86c2.47-.75 6.58-.6 9.17.91a.97.97 0 0 0 1.11-1.69z" fill="white"/>
+              <path d="M16.65 13.58a.81.81 0 0 0-1.12-.27c-2.5-1.54-6.3-1.98-9.26-1.08a.81.81 0 0 0 .47 1.55c2.56-.78 5.75-.33 7.91 1.07a.81.81 0 0 0 1-.27z" fill="white"/>
+              <path d="M15.89 16.49a.65.65 0 0 0-.9-.22 12.3 12.3 0 0 0-7.5-.87.65.65 0 1 0 .29 1.27 11 11 0 0 1 6.69.77.65.65 0 0 0 .92-.95z" fill="white"/>
+            </svg>
+          </button>
+
           {/* Donate app */}
           <button onClick={() => setShowDonateApp(true)}
             className="w-7 h-7 rounded-lg flex items-center justify-center text-pink-400/50
@@ -579,6 +624,16 @@ export default function App() {
         <ChatWindow key={conv.peer.id} conv={conv} onSend={(text) => handleSendMessage(conv.peer.id, text)}
           onClose={() => handleCloseChat(conv.peer.id)} myColor={profile.color} index={i} />
       ))}
+
+      {/* Spotify connect */}
+      {showSpotifyConnect && (
+        <SpotifyConnect
+          currentTrack={spotifyTrack}
+          isPolling={spotifyLoading}
+          onClose={() => { setShowSpotifyConnect(false); setSpotifyLinked(spotifyConnected()); }}
+          onRefresh={spotifyRefresh}
+        />
+      )}
 
       {/* Live broadcast */}
       {showLiveBroadcast && (
